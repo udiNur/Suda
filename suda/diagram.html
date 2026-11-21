@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>diagram renderer</title>
+<!-- Turns mermaid source into SVG text for the page that embeds this frame (Suda).
+     The frame is sandboxed with scripts only and no same-origin, so nothing a diagram contains can reach
+     the page, its storage or the board's API; the page shows the result as an image, where no script runs. -->
+<script>
+'use strict';
+let count=0;
+// The library: Suda gives it (#given in the address), kept on the device by the page, since this frame has no
+// origin of its own and the browser's cache never keeps anything for it; it is read here otherwise (board.html).
+function ready(){parent.postMessage({kind:'diagram-ready'},'*');}
+// Only Suda gives it: this frame must be sandboxed (no origin of its own: self.origin is "null"), and the library
+// must come from its parent at the board's own address. Another site that frames this file without a sandbox (it
+// would run in the board's origin) or posts from its own address is never given a script to run.
+const home=(()=>{try{return new URL(location.href).origin;}catch{return '';}})();
+if(location.hash==='#given'&&self.origin==='null'&&home&&home!=='null'){
+  addEventListener('message',event=>{
+    const give=event.data;
+    if(event.source!==parent||event.origin!==home||!give||give.kind!=='mermaid'||typeof give.source!=='string'||typeof mermaid!=='undefined')return;
+    const script=document.createElement('script');script.textContent=give.source;document.head.append(script);
+    if(typeof mermaid!=='undefined')ready();else parent.postMessage({kind:'diagram-broken'},'*');
+  });
+  parent.postMessage({kind:'diagram-wants'},'*');
+}else if(location.hash!=='#given'){
+  const script=document.createElement('script');script.src='vendor/mermaid.min.js';script.onload=ready;document.head.append(script);
+}
+addEventListener('message',async event=>{
+  const ask=event.data;
+  if(event.source!==parent||!ask||ask.kind!=='render')return;
+  let answer={kind:'rendered',id:ask.id};
+  try{
+    mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:ask.theme==='dark'?'dark':'default',htmlLabels:false,
+      flowchart:{htmlLabels:false},fontFamily:'-apple-system, "Segoe UI", Roboto, "Noto Sans Hebrew", sans-serif'});
+    const id='d'+(++count),out=await mermaid.render(id,String(ask.code).slice(0,20000));
+    answer.svg=out.svg;
+  }catch(error){
+    answer.error=String((error&&error.message)||error).slice(0,300);
+    // A diagram that does not parse leaves its drawing behind: take only that away (mermaid keeps other nodes it needs).
+    for(const node of document.querySelectorAll('#d'+count+',#dd'+count))node.remove();
+  }
+  parent.postMessage(answer,'*');
+});
+</script>
+</head>
+<body></body>
+</html>

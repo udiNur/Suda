@@ -1,0 +1,1380 @@
+<!doctype html>
+<!-- Suda's site (GitHub Pages serves /docs). One file: no build step, no framework, no font file, and nothing loaded
+     from another server. README.md is the source of every line here: when a sentence changes there, it changes
+     here. The tagline is written in one place, the <h1>. The pictures are the README's, from docs/assets/.
+     Under the hero is a scroll story: a sticky phone whose screen changes with the step in view. CSS scroll timelines
+     drive it; one small IntersectionObserver stands in where a browser has none (to try it: ?fallback=1). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suda: one thread per topic for all your AI agents</title>
+<meta name="description" content="One thread per topic for all your AI agents. Every thread says whose turn it is. Any models, any orchestration. Suda runs on your machine, with no dependencies.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#3b1e3f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Suda">
+<meta property="og:description" content="One thread per topic for all your AI agents. Every thread says whose turn it is.">
+<meta property="og:image" content="https://getsuda.dev/assets/hero.png">
+<meta property="og:url" content="https://getsuda.dev/">
+<link rel="canonical" href="https://getsuda.dev/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%233b1e3f'/%3E%3Cpath d='M256 150 136 370M256 150V370M256 150 376 370' stroke='%23fff' stroke-width='28' stroke-linecap='round'/%3E%3Ccircle cx='256' cy='150' r='70' fill='%23e0306a'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='136' cy='372' r='52'/%3E%3Ccircle cx='256' cy='372' r='52'/%3E%3Ccircle cx='376' cy='372' r='52'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* The palette is the app's own: every color means whose turn it is (Rose: on you, Amber: working, Green: done). */
+:root{--plum:#3b1e3f;--night:#1f1422;--rose:#e0306a;--amber:#d08a1c;--green:#2f9467;--mist:#f7f0f8;--blush:#ff7aa0;
+  --bg:#f7f0f8;--card:#fff;--ink:#2c1330;--dim:#5a4a5e;--mute:#6a5370;--line:#eadfec;--code:rgba(59,30,63,.08);--focus:#3b1e3f;
+  --shade:0 1px 0 rgba(44,19,48,.08),0 6px 18px rgba(44,19,48,.08);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1422;--card:#2c1c31;--ink:#f7f0f8;--dim:#dcc9e0;--mute:#b9a3bf;--line:#45314b;
+  --code:rgba(255,255,255,.12);--focus:#ff7aa0;--shade:0 0 0 1px rgba(255,255,255,.07)}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;font:17px/1.55 var(--sans);color:var(--ink);background:var(--bg)}
+h1,h2,h3,p,ul,ol,figure,pre{margin:0}
+ul,ol{padding:0;list-style:none}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit;text-underline-offset:3px}
+code{font:.88em var(--mono);background:var(--code);padding:1px 5px;border-radius:5px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.w{max-width:1168px;margin:0 auto;padding:0 24px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+section{padding:76px 0}
+h2{font-size:clamp(28px,3.6vw,42px);line-height:1.1;letter-spacing:-.03em;font-weight:800}
+h3{font-size:18px;line-height:1.3;font-weight:700;margin-bottom:6px}
+.eye{margin-bottom:12px;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.lead{max-width:44em;margin-top:16px;font-size:19px;color:var(--dim)}
+.fine{margin-top:22px;font-size:15px;color:var(--mute)}
+.dark{--code:rgba(255,255,255,.12);--focus:#ff7aa0;color:var(--mist);background:linear-gradient(160deg,#3b1e3f,#1f1422)}
+.dark .eye{color:#cdb6d2}.dark .lead,.dark .fine{color:#dcc9e0}
+.dark a:hover{color:var(--blush)}
+
+/* buttons, pills, badges */
+.btn{display:inline-flex;align-items:center;padding:10px 20px;border:1px solid transparent;border-radius:999px;font-weight:700;text-decoration:none}
+.rose{padding:12px 26px;font-size:19px;color:#fff;background:var(--rose);box-shadow:0 8px 22px rgba(224,48,106,.35)}
+.dark .rose:hover{color:#fff;background:#c7265b}
+.ghost{color:var(--mist);border-color:rgba(255,255,255,.32)}
+.ghost:hover{border-color:var(--blush)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.pill{display:inline-block;padding:3px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.p-you{background:#fde7ee;color:#b3184d}.p-work{background:#fbf0dc;color:#8a5a09}.p-done{background:#e2f3ea;color:#1f6b49}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.badges li{display:flex;overflow:hidden;border-radius:6px;font-size:13px;font-weight:700;line-height:1.3;box-shadow:0 0 0 1px var(--line)}
+.badges span,.badges b{padding:4px 9px}
+.badges span{color:#fff;background:var(--plum)}
+
+/* the hero: the banner (docs/demo/hero.html), with real text */
+.hero{color:var(--mist);background:linear-gradient(rgba(26,15,30,0) 78%,#1a0f1e),radial-gradient(900px 520px at 78% 18%,#6a2f63 0%,rgba(106,47,99,0) 70%),linear-gradient(135deg,#3b1e3f 0%,#24132a 60%,#1a0f1e 100%)}
+.bar{display:flex;align-items:center;gap:28px;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;font-size:24px;font-weight:800;letter-spacing:-.03em;text-decoration:none}
+.brand svg{width:36px;height:36px;border-radius:22%;box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.14)}
+.links{display:flex;gap:28px}
+.links a{padding:8px 0;font-size:16px;font-weight:600;color:#eadcee;text-decoration:none}
+.top{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-areas:"t s" "c s";gap:0 44px;padding:40px 0 100px}
+.top>div:first-child{grid-area:t;align-self:end}
+h1{font-size:clamp(34px,3.5vw,45px);line-height:1.08;letter-spacing:-.035em;font-weight:800}
+h1 span,h1 em{display:block}
+h1 em{font-style:normal;color:var(--blush)}
+.sub{max-width:27em;margin-top:20px;font-size:20px;color:#dcc9e0}
+.cmd{margin-top:26px;border:1px solid rgba(255,255,255,.16);border-radius:14px;color:var(--mist);background:#150c18}
+.cmdh{display:flex;align-items:center;justify-content:space-between;padding:7px 8px 7px 16px;border-bottom:1px solid rgba(255,255,255,.1);font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#b9a3bf}
+.cmd pre{padding:14px 16px 16px;overflow-x:auto;font:14.5px/1.75 var(--mono)}
+.cmd pre i{font-style:normal;color:#b9a3bf}
+.copy{padding:5px 12px;border:1px solid rgba(255,255,255,.24);border-radius:8px;font:700 13px var(--sans);color:var(--mist);background:rgba(255,255,255,.1);cursor:pointer}
+.copy:hover{background:rgba(255,255,255,.2)}
+.play{position:absolute;left:10px;margin-top:-42px;background:#1f1422}
+.chips{grid-area:c;align-self:start;display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.chips li{padding:6px 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px;font-size:14.5px;font-weight:600;background:rgba(255,255,255,.1)}
+.shots{grid-area:s;align-self:center;position:relative;padding:0 4% 10% 0}
+.win{position:relative;overflow:hidden;border-radius:12px;background:#fff;box-shadow:0 30px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.12)}
+.dots{display:flex;align-items:center;gap:7px;height:26px;padding:0 12px;background:#ece7ee}
+.dots i{width:11px;height:11px;border-radius:50%;background:#ff5f57}.dots i+i{background:#febc2e}.dots i+i+i{background:#28c840}
+.phone{position:absolute;right:0;bottom:0;width:31%;padding:6px;border-radius:24px;background:#0d0a0f;box-shadow:0 30px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.15)}
+.phone img{width:100%;aspect-ratio:36/70;object-fit:cover;object-position:top;border-radius:18px}
+
+/* cards and pictures */
+.g3,.turns,.six,.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:36px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:36px}
+.three{margin-top:22px}
+.card,.f,.turn{border-radius:16px;background:var(--card);box-shadow:var(--shade)}
+.card{padding:20px 22px}
+.card p,.g3 p,figcaption,.turn p,.turn li{font-size:15.5px;color:var(--dim)}
+.card b,.g3 b,figcaption b,.turn b{color:var(--ink)}
+.card li+li{margin-top:16px}
+ul.card{display:flex;flex-direction:column;justify-content:center}
+ul.card p{font-size:17px}
+.f{position:relative;overflow:hidden}
+.f img{width:100%;border-bottom:1px solid var(--line)}
+figcaption{padding:14px 18px 18px}
+.g3>div{padding-top:18px;border-top:1px solid var(--line)}
+.turn{padding:18px 20px 22px;border-top:5px solid var(--rose)}
+.turn.work{border-top-color:var(--amber)}.turn.done{border-top-color:var(--green)}
+.turn li{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.turn li b{display:block;font-size:17px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center}
+.chat{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:22px;border-radius:20px;background:var(--card);box-shadow:var(--shade)}
+.chat li{max-width:86%;padding:8px 14px 10px;border-radius:16px 16px 16px 4px;font-size:16px;background:var(--bg)}
+.chat small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.chat .me{align-self:flex-end;border-radius:16px 16px 4px 16px;color:#fff;background:#5b2f60}
+.chat .me small{color:#e3d2e6}
+.say{margin-top:18px;font-size:22px;line-height:1.3;font-weight:800;letter-spacing:-.02em}
+.checks li{position:relative;padding-left:30px;color:var(--dim)}
+.checks li+li{margin-top:16px}
+.checks li::before{content:"";position:absolute;left:4px;top:.45em;width:12px;height:12px;border-radius:50%;background:var(--green)}
+.checks b{color:var(--ink)}
+
+/* any models, any orchestration: the README's diagram, drawn in CSS */
+.dark .card{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);box-shadow:none}
+.dark .card p{color:#dcc9e0}.dark .card b,.dark h3{color:#fff}
+.flow{--ln:#cdb6d2;display:grid;grid-template-columns:160px 1fr 160px 1fr 160px 1fr 160px;margin-top:40px}
+.n,.e{grid-row:2}
+.n{text-align:center}
+.n b{display:flex;align-items:center;justify-content:center;height:60px;border:2px solid transparent;border-radius:14px;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.n span{display:block;margin:6px -24px 0;font-size:13px;line-height:20px;white-space:nowrap;color:#dcc9e0}
+.you b{color:#fff;background:var(--rose)}
+.suda b{color:#fff;border-color:var(--mist);background:var(--plum)}
+.tower b{color:var(--night);border-color:var(--plum);background:var(--mist)}
+.agents b{color:var(--night);background:var(--amber)}
+.e{display:grid;grid-template-rows:1fr 1fr;gap:6px;height:60px;padding:0 9px;font-size:13px;line-height:17px;text-align:center;white-space:nowrap;color:#eadcee}
+.e span{position:relative}
+.fw{align-self:end;padding-bottom:8px}.bk{align-self:start;padding-top:8px}
+.e span::before{content:"";position:absolute;left:0;right:0;height:2px;background:var(--ln)}
+.fw::before{bottom:0}.bk::before{top:0}
+.e span::after{content:"";position:absolute;border:5px solid transparent}
+.e .fw::after{right:-3px;bottom:-4px;border-right:0;border-left:8px solid var(--ln)}
+.e .bk::after{left:-3px;top:-4px;border-left:0;border-right:8px solid var(--ln)}
+.ret{position:relative;grid-row:1;grid-column:3/8;height:30px;margin:26px 79px 0;border:2px solid var(--ln);border-bottom:0;border-radius:14px 14px 0 0}
+.ret span{position:absolute;left:0;right:0;top:-26px;font-size:13px;text-align:center;color:#eadcee}
+.ret::after{content:"";position:absolute;left:-6px;bottom:-2px;border:5px solid transparent;border-bottom:0;border-top:8px solid var(--ln)}
+
+/* phone and desktop */
+.pair{display:grid;grid-template-columns:358fr 750fr;gap:20px;align-items:start}
+.pair div{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shade)}
+.pd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:48px;align-items:center}
+.pd p+p{margin-top:14px}
+.mt{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:22px;align-items:start;margin-top:36px}
+.mt .card+.card{margin-top:22px}
+
+/* how it compares: a table, and a card for each row on a phone */
+table{width:100%;margin-top:34px;border-collapse:collapse;border-radius:16px;overflow:hidden;font-size:15.5px;background:var(--card);box-shadow:var(--shade)}
+th,td{padding:15px 20px;border-top:1px solid var(--line);text-align:left;vertical-align:top;color:var(--dim)}
+thead th{border-top:0;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+tbody th{width:19%;color:var(--ink)}
+td b{color:var(--ink)}
+td:last-child{width:32%;font-weight:600;color:var(--ink)}
+
+/* install and footer */
+.next li{padding:16px 0;border-top:1px solid rgba(255,255,255,.14);font-size:15.5px;color:#dcc9e0}
+.next li:last-child{border-bottom:1px solid rgba(255,255,255,.14)}
+.next b{display:block;font-size:17px;color:#fff}
+.foot{padding:40px 0 48px;font-size:15px;color:#dcc9e0;background:#1a0f1e}
+.foot .w{display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px}
+.foot .brand{color:var(--mist)}
+.foot nav{display:flex;flex-wrap:wrap;gap:6px 22px}
+.foot nav a{padding:4px 0}
+.foot a:hover{color:var(--blush)}
+.foot p{flex-basis:100%;color:#b9a3bf}
+
+/* the scroll story: a sticky phone whose screen changes with the step in view. Seven numbers drive every small part:
+   --q1 to --q5 (0 to 1: how far that step has arrived), --u (the undo line) and --b (the status bar). The second style
+   block ties them to scroll timelines; without those, the script at the end sets them and transitions do the moving. */
+@property --q1{syntax:"<number>";inherits:true;initial-value:0}
+@property --q2{syntax:"<number>";inherits:true;initial-value:0}
+@property --q3{syntax:"<number>";inherits:true;initial-value:0}
+@property --q4{syntax:"<number>";inherits:true;initial-value:0}
+@property --q5{syntax:"<number>";inherits:true;initial-value:0}
+@property --u{syntax:"<number>";inherits:true;initial-value:0}
+@property --b{syntax:"<number>";inherits:true;initial-value:0}
+.story{--vh:100vh;--ph:min(620px,var(--vh) - 176px);--pw:calc(var(--ph)*390/844);--py:calc(var(--vh)/2 - var(--ph)/2 + 22px);
+  --px:calc(54.5% - 48px - var(--pw));--bz:9px;--mv:1;--r0:45%;--r1:85%;--r2:35%;--t0:50%;--t1:88%;--t2:12%;--t3:50%;
+  padding:0;overflow:clip;background:#1a0f1e}
+.sintro{padding-block:84px 0;text-align:center}
+.sintro em{display:block;font-style:normal;color:var(--blush)}
+.sintro .lead{margin-inline:auto}
+.skip{display:inline-block;margin-top:12px;font-size:15px;color:#cdb6d2}
+.sgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:48px;max-width:1168px;margin:0 auto;padding:0 24px}
+.lay{grid-area:1/1/span 5/-1;position:sticky;top:0;height:var(--vh);pointer-events:none}
+.scr{z-index:1}.fx{z-index:2}.snav{z-index:4}
+.step{position:relative;z-index:3;grid-column:2;display:flex;align-items:center;min-height:100vh;padding-right:44px}
+#s1{grid-row:1}#s2{grid-row:2}#s3{grid-row:3}#s4{grid-row:4}#s5{grid-row:5}
+.t{max-width:430px}
+.k{font:700 13px var(--mono);letter-spacing:.12em;color:#b9a3bf}
+.t h3{margin:10px 0 14px;font-size:clamp(26px,2.9vw,36px);line-height:1.12;letter-spacing:-.03em;font-weight:800;color:#fff}
+.t>p:not(.k),.t li{font-size:18px;color:#dcc9e0}
+.t ul{margin-top:18px}
+.t li{display:flex;align-items:baseline;gap:12px;font-size:16px}
+.t li+li{margin-top:10px}
+.t .pill{flex:none;min-width:78px;text-align:center}
+/* the phone: one frame (.bez), five screens over it, and the small parts in front (.fx), all placed by the same four numbers */
+.ph{position:absolute;top:var(--py);left:var(--px);width:var(--pw);height:var(--ph);border-radius:calc(var(--pw)*.105)}
+.bez{box-sizing:content-box;margin:calc(var(--bz)*-1);border:var(--bz) solid #0d0a0f;border-radius:calc(var(--pw)*.105 + var(--bz));background:#0d0a0f;
+  box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.16)}
+.scr .ph{overflow:hidden}
+.scr img{width:100%;height:100%;object-fit:cover}
+.glow{position:absolute;inset:0;will-change:opacity;background:radial-gradient(ellipse calc(var(--pw)/2 + 190px) calc(var(--ph)/2 + 90px) at calc(var(--px) + var(--pw)/2) calc(var(--py) + var(--ph)/2),var(--c),transparent 76%)}
+.gy{--c:rgba(224,48,106,.6);opacity:calc(1 - var(--q4))}
+.gw{--c:rgba(208,138,28,.52);opacity:calc(var(--q4) - var(--q5))}
+.gd{--c:rgba(47,148,103,.6);opacity:var(--q5)}
+/* whose turn it is: all three light up on the list, then one at a time as the topic moves */
+.rail{position:absolute;top:calc(var(--py) - 58px);left:calc(var(--px) + var(--pw)/2);display:flex;gap:8px;white-space:nowrap;transform:translateX(-50%)}
+.rail .pill{padding:5px 14px;font-size:14px;opacity:calc(.2 + .8*var(--l));transform:scale(calc(.9 + .1*var(--l)))}
+.rail .p-you{--l:calc(min(1,var(--q1)*3) - var(--q4))}
+.rail .p-work{--l:calc(clamp(0,var(--q1)*3 - 1,1)*(1 - var(--q2)) + var(--q4) - var(--q5))}
+.rail .p-done{--l:calc(clamp(0,var(--q1)*3 - 2,1)*(1 - var(--q2)) + var(--q5))}
+/* the notes beside the phone: --a is how far their step has arrived, --z how far the next one has, --i their place in
+   the queue. They leave before the next step's notes come in. */
+.c1{--a:var(--q1);--z:var(--q2)}.c2{--a:var(--q2);--z:var(--q3)}.c3{--a:var(--q3);--z:var(--q4)}.c4{--a:var(--q4);--z:var(--q5)}.c5{--a:var(--q5);--z:0}
+.co{--o:clamp(0,min((var(--a) - .35)*4 - var(--i,0)*.5,1 - var(--z)*3.5),1);position:absolute;right:calc(100% + 32px);padding:6px 13px;border:1px solid rgba(255,255,255,.22);border-radius:16px;
+  font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;color:var(--mist);background:#2c1c31;opacity:var(--o);transform:translate(calc((var(--o) - 1)*22px),-50%)}
+.co::after{content:"";position:absolute;left:100%;top:50%;width:calc(32px - var(--bz));height:1px;background:rgba(255,255,255,.4)}
+.d{display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:var(--rose)}
+.hot{padding:8px 18px;border-color:transparent;border-radius:999px;font-size:21px;letter-spacing:-.02em;color:#fff;background:var(--rose);box-shadow:0 8px 22px rgba(224,48,106,.4);
+  transform-origin:right;transform:translateY(-50%) scale(calc(.4 + .6*var(--o)))}
+.undo i{position:absolute;left:13px;right:13px;bottom:2px;height:2px;border-radius:2px;background:var(--blush);transform-origin:left;transform:scaleX(calc(1 - var(--u)))}
+.pb{display:block;width:118px;height:5px;margin:7px 0 3px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.2)}
+.pb i{display:block;height:100%;background:#4c8fe8;transform-origin:left;transform:scaleX(calc(.06 + .54*var(--b)))}
+.ok{border-color:transparent;background:var(--green)}
+.tap{position:absolute;left:38%;top:31.4%;width:70px;height:70px;margin:-35px;border:3px solid var(--blush);border-radius:50%;background:rgba(224,48,106,.3);
+  opacity:calc(4*var(--q3)*(1 - var(--q3)));transform:scale(calc(.25 + 1.2*var(--q3)))}
+.snav{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;opacity:min(1,var(--q1)*2)}
+.snav a{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;pointer-events:auto}
+.snav i{--p:calc(var(--a) - var(--z));width:8px;height:8px;border-radius:50%;background:#fff;opacity:calc(.3 + .7*var(--p));transform:scale(calc(1 + .6*var(--p)))}
+/* the fallback (class fb, set in the head): the script names the step, these transitions move the parts */
+.fb .sgrid{transition:--q1 .9s,--q2 .6s,--q3 .6s,--q4 .6s,--q5 .6s,--u 4s linear .4s,--b 1.6s .3s}
+.fb .scr img{transition:transform .7s cubic-bezier(.3,0,.2,1),opacity .5s}
+.fb .sl:not(.on) img{transform:translateX(102%)}
+.fb .fd:not(.on) img{opacity:0}
+.fb .t{opacity:0;transform:translateY(calc(var(--mv)*30px));transition:opacity .45s,transform .45s}
+.fb .in .t{opacity:1;transform:none}
+
+@media (max-width:1140px){
+  .flow{grid-template-columns:minmax(0,1fr) 54px;max-width:340px;margin-inline:auto}
+  .n,.e{grid-row:auto;grid-column:1}
+  .n span{margin:6px 0 0;font-size:14px}
+  .e{display:block;height:auto;padding:10px 0;font-size:14px;line-height:22px}
+  .e span{display:block;padding:0}
+  .e span::before{position:static;display:inline;height:auto;margin-right:6px;background:none}
+  .e .fw::before{content:"\2193"}.e .bk::before{content:"\2191"}
+  .e span::after{display:none}
+  .ret{grid-column:2;grid-row:3/8;width:22px;height:auto;margin:29px 0 55px;border:2px solid var(--ln);border-left:0;border-radius:0 14px 14px 0}
+  .ret span{left:100%;right:auto;top:50%;margin-left:8px;white-space:nowrap;writing-mode:vertical-rl;transform:translateY(-50%)}
+  .ret::after{left:-2px;top:-6px;bottom:auto;border:5px solid transparent;border-left:0;border-right:8px solid var(--ln)}
+}
+@media (max-width:960px){
+  section{padding:60px 0}
+  .top,.split,.pd,.mt{grid-template-columns:minmax(0,1fr);gap:36px}
+  .top{grid-template-areas:"t" "s" "c";padding:24px 0 64px}
+  .chips{margin-top:0}
+  h1{font-size:clamp(24px,7vw,46px)}
+  .g3,.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shots{max-width:640px}
+}
+@media (max-width:640px){
+  body{font-size:16px}
+  .w{padding:0 20px}
+  .bar{gap:12px}.links{gap:12px}.links a{font-size:14px}
+  .brand{gap:8px;font-size:21px}.brand svg{width:30px;height:30px}
+  .bar .btn{padding:6px 12px;font-size:14px}
+  .sub,.lead{font-size:18px}
+  .g3,.turns,.two,.three{grid-template-columns:minmax(0,1fr);gap:16px}
+  .six{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .six figcaption{padding:10px 12px 14px;font-size:14px}
+  .cmd pre{font-size:13px}.cmd pre i{display:none}
+  .chips{gap:8px}.chips li{padding:5px 11px;font-size:13px}
+  table,tbody,tr,th,td{display:block}
+  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  table{overflow:visible;background:none;box-shadow:none}
+  tbody tr{margin-top:14px;padding:16px 18px 18px;border-radius:16px;background:var(--card);box-shadow:var(--shade)}
+  th,td{padding:0;border:0}
+  tbody th,td:last-child{width:auto}
+  tbody th{font-size:18px}
+  td{margin-top:10px}
+  td::before{display:block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+  td:nth-child(2)::before{content:"Built around"}td:nth-child(3)::before{content:"What Suda adds"}
+}
+@media (max-width:380px){.links a:nth-child(2){display:none}}
+/* the story on a phone or a narrow window: the phone stays at the top, each step's text is a card that waits at the bottom */
+@media (max-width:999px){
+  .story{--ph:min(760px,var(--vh) - 236px);--py:46px;--px:calc(50% - var(--pw)/2);--bz:6px;--r0:6%;--r1:30%;--r2:0%;--t0:20px;--t1:150px;--t2:0px;--t3:100px}
+  .sintro{padding-block:60px 28px}
+  .sgrid{grid-template-columns:minmax(0,1fr);padding:0}
+  .step{grid-column:1;align-items:flex-end;padding:0 10px}
+  .t{--mv:0;position:sticky;bottom:10px;width:100%;max-width:560px;margin:0 auto;padding:12px 16px 14px;border:1px solid rgba(255,255,255,.14);border-radius:18px;
+    background:rgba(26,15,30,.96);box-shadow:0 -8px 30px rgba(0,0,0,.4)}
+  .t h3{margin:4px 0 6px;font-size:20px}
+  .t>p:not(.k){font-size:15px;line-height:1.45}
+  .t ul{margin-top:8px}.t li{font-size:14.5px}.t li+li{margin-top:5px}
+  .x,.co{display:none}
+  .rail{top:10px}.rail .pill{padding:2px 10px;font-size:12px}
+  .hot{display:block;right:auto;left:calc(100% - 44px);font-size:16px}
+  .hot::after{display:none}
+  .snav{justify-content:flex-start;padding:calc(var(--py) + var(--ph)/2 - 70px) 3px 0 0}
+}
+@supports (height:1svh){@media (max-width:999px){.story{--vh:100svh}}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.story{--mv:0}.sgrid{--u:0!important;--b:1!important}.tap{display:none}
+  .fb .sgrid,.fb .scr img,.fb .t{transition:none}}
+@media (prefers-reduced-motion:reduce) and (min-width:1000px){.fb .t{opacity:1}}
+
+/* Try it: a scripted copy of the app to play with, in the app's own colours and sizes (suda.html, light theme). Every
+   rule sits under .try and every class in the window starts with "s-", so nothing leaks either way. --tc is the colour
+   of whose turn the release topic is on: it lights the window from behind. */
+@property --tc{syntax:"<color>";inherits:true;initial-value:#e0306a}
+.try{--tc:#e0306a;position:relative;overflow:clip;padding:84px 0 92px;text-align:center;background:linear-gradient(#1a0f1e,#2b1731 52%,#1a0f1e);transition:--tc .9s}
+.try[data-turn=work]{--tc:#d08a1c}.try[data-turn=done]{--tc:#2f9467}
+.try::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 780px 440px at 50% 64%,color-mix(in srgb,var(--tc) 40%,transparent),transparent 72%)}
+.try>.w{position:relative}
+.try .lead{margin-inline:auto}
+.try [hidden]{display:none!important}
+.try :where(button){margin:0;padding:0;border:0;font:inherit;color:inherit;text-align:inherit;background:none;cursor:pointer}
+/* above the window: where he is in the flow, what to do next (read aloud, politely), and Start over */
+.try .s-coach{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px 16px;max-width:1120px;margin:30px auto 16px;padding:9px 9px 9px 18px;
+  border:1px solid rgba(255,255,255,.16);border-radius:18px;text-align:left;background:rgba(26,15,30,.62)}
+.try .s-steps{display:flex;gap:6px}
+.try .s-steps li{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font:700 12px var(--mono);color:#b9a3bf;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.26)}
+.try .s-steps .was{color:#1a0f1e;background:#cdb6d2;box-shadow:none}
+.try .s-steps .now{color:#1a0f1e;background:#fff;box-shadow:0 0 0 3px var(--tc)}
+.try .s-say{font-size:16px;line-height:1.4;color:#eadcee}
+.try .s-say b{color:#fff}
+.try .s-again{padding:7px 16px;border:1px solid rgba(255,255,255,.32);border-radius:999px;font:700 14px var(--sans);white-space:nowrap;color:var(--mist)}
+.try .s-again:hover{border-color:var(--blush)}
+.try .s-again.go{border-color:transparent;background:var(--rose);box-shadow:0 8px 22px rgba(224,48,106,.35)}
+/* the window, and the app's own colours */
+.try .s-win{max-width:1120px;margin:0 auto;overflow:hidden;border-radius:14px;text-align:left;box-shadow:0 0 0 1px rgba(255,255,255,.14),0 40px 90px rgba(0,0,0,.55),0 0 120px -34px var(--tc)}
+.try .s-chrome{display:flex;align-items:center;gap:7px;height:36px;padding:0 14px;background:#ece7ee}
+.try .s-chrome i{width:11px;height:11px;border-radius:50%;background:#ff5f57}.try .s-chrome i+i{background:#febc2e}.try .s-chrome i+i+i{background:#28c840}
+.try .s-chrome span{flex:0 1 360px;margin:0 auto;padding:2px 12px;border-radius:7px;font:12px/1.5 var(--mono);text-align:center;color:#5a4a5e;background:#fff}
+.try .s-chrome::after{content:"";width:47px}
+.try .s-app{--side:#3b1e3f;--side-hover:#4c2951;--side-ink:#e7dce9;--side-mute:#bba9bf;--side-line:#553459;--side-active:#f7f0f8;--side-active-ink:#2c1330;--side-active-mute:#6a5370;
+  --bg:#fff;--ink:#1d1c1d;--mute:#616061;--line:#e4e2e4;--line-strong:#bcb9bc;--hover:#f7f6f7;--soft:#f1eff1;--send:#007a5a;--focus:#1d6fd6;
+  --you:#e0306a;--you-ink:#b3184d;--work:#d08a1c;--work-ink:#8a5a09;--done:#2f9467;--done-ink:#1f6b49;--who-owner:#2f7d6b;--who-tower:#6b3fa0;--who-fork:#c2681c;--build:#2f73c9;--todo:#b9b6b9;
+  position:relative;display:flex;height:clamp(520px,100vh - 180px,700px);overflow:hidden;font:15px/1.5 var(--sans);color:var(--ink);background:var(--side);color-scheme:light}
+.try .c-d{--c:var(--done)}.try .c-b,.try .c-r{--c:var(--build)}.try .c-w{--c:var(--work)}.try .c-y{--c:var(--you)}.try .c-t{--c:var(--todo)}
+/* the list: one row per topic, in three groups by whose turn it is */
+.try .s-side{--focus:#fff;flex:0 0 300px;min-width:0;display:flex;flex-direction:column;color:var(--side-ink);background:var(--side)}
+.try .s-side-head{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}
+.try .s-logo{flex:1;font-size:18px;font-weight:800;color:#fff}
+.try .s-you-count{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;color:#fff;background:var(--you)}
+.try .s-conn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--side-mute)}
+.try .s-conn::before{content:"";width:8px;height:8px;border-radius:50%;background:#4cc38a}
+.try .s-tools{display:flex;gap:6px;margin:0 12px 6px}
+.try .s-jump{flex:1;display:flex;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:8px;font-size:14px;background:#ffffff1c}
+.try .s-tool{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:#ffffff1c}
+.try .s-list{flex:1;min-height:0;overflow-y:auto;padding:2px 8px 16px;scrollbar-width:thin;scrollbar-color:var(--side-line) transparent}
+.try .s-sec{margin-top:14px}
+.try .s-sec:first-child{margin-top:4px}
+.try .s-sec-h{display:flex;align-items:center;gap:8px;padding:4px 10px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--side-mute)}
+.try .s-sec-h::before{content:"";width:7px;height:7px;margin:0 4px 4px 3px;border:solid currentColor;border-width:0 0 2px 2px;border-radius:1px;transform:rotate(-45deg)}
+.try .s-sec-h i{width:8px;height:8px;border-radius:50%;background:var(--you)}
+.try [data-s=work] .s-sec-h i{background:var(--work)}.try [data-s=done] .s-sec-h i{background:var(--done)}
+.try .s-sec-h b{font-weight:600;opacity:.85}
+.try .s-sec-h em{margin-left:auto;overflow:hidden;font-style:normal;font-weight:400;font-size:12px;text-overflow:ellipsis;opacity:.8}
+.try .s-list li{position:relative}
+.try .s-list .s-fly{z-index:2}
+.try .s-ch{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:4px 10px;border-radius:7px;color:var(--side-ink);-webkit-user-select:none;user-select:none}
+.try .s-ch:hover{background:var(--side-hover)}
+.try .s-slot{flex:0 0 22px;display:grid;place-items:center;height:22px;border-radius:6px;font:600 12px/1 var(--mono);background:#ffffff1f}
+.try .s-ch-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.try .s-ch-title,.try .s-ch-note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.try .s-ch-note{font-size:12.5px;line-height:1.35;color:var(--side-mute)}
+.try [data-s=done] .s-ch-note{display:none}
+.try .s-ch.unread .s-ch-title{font-weight:800;color:#fff}
+.try .s-mini{display:flex;gap:1px;max-width:120px;height:3px;margin-top:3px;overflow:hidden;border-radius:2px}
+.try .s-mini i,.try .s-tbar i{min-width:3px;background:var(--c)}
+.try .s-ch-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.try .s-ch-time{font-size:12px;white-space:nowrap;color:var(--side-mute)}
+.try .s-badge{display:grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;font-size:12px;font-weight:700;line-height:1;color:#fff;background:var(--you)}
+.try .s-badge.seen{color:#ffb3cc;background:none;box-shadow:inset 0 0 0 1.5px #ff9dbd}
+.try .s-ch.active{color:var(--side-active-ink);background:var(--side-active)}
+.try .s-ch.active .s-ch-title{color:inherit}
+.try .s-ch.active :is(.s-ch-note,.s-ch-time){color:var(--side-active-mute)}
+.try .s-ch.active .s-slot{color:#fff;background:var(--side)}
+.try .s-ch.active .s-badge.seen{color:var(--you-ink);box-shadow:inset 0 0 0 1.5px var(--you)}
+.try .s-side-foot{padding:8px 18px 10px;border-top:1px solid var(--side-line);font-size:13px;color:var(--side-mute)}
+/* the gentle hint: a ring that breathes around what to press next, and a label that points at the first topic */
+.try .s-hint{animation:s-ring 1.8s ease-out infinite}
+.try .s-tip{position:absolute;left:12px;padding:4px 12px;border-radius:99px;font-size:13px;font-weight:700;color:#fff;background:var(--you);box-shadow:0 6px 16px rgba(224,48,106,.35);transform:translateY(-50%);animation:s-nudge 1.5s ease-in-out infinite}
+.try .s-tip::before{content:"";position:absolute;right:100%;top:50%;margin-top:-6px;border:6px solid transparent;border-left:0;border-right:8px solid var(--you)}
+@keyframes s-ring{0%{box-shadow:0 0 0 0 rgba(255,122,160,.95)}75%,100%{box-shadow:0 0 0 8px rgba(255,122,160,0)}}
+@keyframes s-nudge{50%{transform:translate(6px,-50%)}}
+/* the conversation: its head, the tasks, the open question, the messages */
+.try .s-chat{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.try .s-empty{flex:1;display:grid;place-items:center;padding:24px;text-align:center;color:var(--mute)}
+.try .s-pane{flex:1;min-height:0;display:flex;flex-direction:column}
+.try .s-head{display:flex;align-items:center;gap:6px;min-height:60px;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line)}
+.try .s-head-main{flex:1;min-width:0}
+.try .s-head-title{display:flex;align-items:center;gap:8px;min-width:0}
+.try .s-h{margin:0;overflow:hidden;font-size:17px;line-height:1.5;font-weight:800;letter-spacing:0;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.try .s-h:focus{outline:0}
+.try .s-head .s-slot{color:var(--mute);background:var(--soft)}
+.try .s-tid{font:12px var(--mono);white-space:nowrap;color:var(--mute)}
+.try .s-head-status{display:flex;align-items:center;gap:8px;min-width:0;margin-top:2px;font-size:13px;color:var(--mute)}
+.try .s-note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.try .s-chip{flex:none;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:700;color:var(--you-ink);background:color-mix(in srgb,var(--you) 14%,transparent)}
+.try .s-chip[data-s=work]{color:var(--work-ink);background:color-mix(in srgb,var(--work) 18%,transparent)}
+.try .s-chip[data-s=done]{color:var(--done-ink);background:color-mix(in srgb,var(--done) 16%,transparent)}
+.try .s-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:8px;color:var(--mute)}
+.try button.s-icon:hover{color:var(--ink);background:var(--hover)}
+.try .s-back{display:none}
+.try .s-tasks{border-bottom:1px solid var(--line)}
+.try .s-tasks-top{display:flex;align-items:center;gap:12px;width:100%;min-height:36px;padding:4px 20px;font-size:13px;color:var(--mute)}
+.try .s-tasks-top:hover{background:var(--hover)}
+.try .s-tbar{flex:0 1 220px;min-width:80px;display:flex;gap:2px;height:8px;overflow:hidden;border-radius:4px}
+.try .s-tasks-line{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.try .s-tasks-line b{color:var(--you-ink)}
+.try .s-caret{flex:none;width:8px;height:8px;margin:0 5px 0 3px;border:solid currentColor;border-width:0 0 2px 2px;border-radius:1px;transform:rotate(-135deg);transition:transform .15s}
+.try [aria-expanded=true]>.s-caret{transform:translateY(-2px) rotate(-45deg)}
+.try .s-tasks-list{max-height:176px;overflow-y:auto;padding:2px 12px 10px}
+.try .s-task{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px}
+.try .s-task span{flex:1;min-width:0}
+.try .s-task small{display:block;font-size:12.5px;color:var(--mute)}
+.try .s-task em{display:inline-flex;align-items:center;gap:6px;min-height:22px;padding:0 8px;border:1px solid var(--line);border-radius:99px;font-style:normal;font-size:12px;font-weight:700;white-space:nowrap}
+.try .s-task em::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.try .s-task.mine{background:color-mix(in srgb,var(--you) 9%,transparent);box-shadow:inset 3px 0 0 var(--you)}
+.try .s-pin{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px 20px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--you) 5%,var(--bg))}
+.try .s-pin.calm{background:var(--bg)}
+.try .s-pin-label{font-size:12px;font-weight:700;color:var(--you-ink)}
+.try .s-pin-text{font-weight:600}
+.try .s-pin-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.try .s-pin-hint{font-size:13px;color:var(--mute)}
+.try .s-btn,.try .s-opt{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:4px 14px;border:1px solid var(--line-strong);border-radius:8px;font-weight:700;font-size:14px;background:var(--bg)}
+.try :is(.s-btn,.s-opt):not(:disabled,.primary):hover{background:var(--hover)}
+.try .s-btn.primary{border-color:var(--send);color:#fff;background:var(--send)}
+.try .s-btn:disabled,.try .s-opt:disabled{opacity:.5;cursor:default}
+.try .s-num{min-width:18px;padding:2px 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:5px;font:11px/1.2 var(--mono);text-align:center;color:var(--mute);background:var(--soft)}
+.try .s-adv{padding:0 8px;border-radius:99px;font-style:normal;font-size:12px;font-weight:700;color:var(--done-ink);background:color-mix(in srgb,var(--done) 16%,transparent)}
+.try .s-scroll{position:relative;flex:1;min-height:0;overflow-y:auto;padding:8px 0 6px;scrollbar-width:thin}
+.try .s-scroll:focus-visible{outline-offset:-3px}
+.try .s-intro{margin-bottom:6px;padding:20px 20px 12px;border-bottom:1px solid var(--line)}
+.try .s-intro b{display:block;font-size:20px;font-weight:800}
+.try .s-intro small{display:block;margin:2px 0 8px;font-size:13px;color:var(--mute)}
+.try .s-intro span{font-weight:600}
+.try .s-day{display:flex;align-items:center;margin:12px 0 2px;padding:0 20px}
+.try .s-day::before,.try .s-day::after{content:"";flex:1;height:1px;background:var(--line)}
+.try .s-day span{padding:1px 12px;border:1px solid var(--line);border-radius:99px;font-size:12px;font-weight:700}
+.try .s-msg{display:flex;gap:10px;margin-top:10px;padding:1px 20px}
+.try .s-msg.fresh{animation:s-in .3s ease-out}
+@keyframes s-in{from{opacity:0;transform:translateY(8px)}}
+.try .s-av{flex:none;display:grid;place-items:center;width:36px;height:36px;margin-top:3px;border-radius:9px;font-weight:700;font-size:14px;line-height:1;color:#fff;background:var(--who-fork)}
+.try .s-av[data-w=me]{background:var(--who-owner)}.try .s-av[data-w=tw]{background:var(--who-tower)}
+.try .s-content{flex:1;min-width:0;max-width:46rem}
+.try .s-meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.try .s-name{font-weight:800}
+.try .s-tag{padding:0 4px;border-radius:3px;font:600 10px/1.4 var(--mono);color:var(--mute);background:var(--soft)}
+.try .s-q-tag{padding:0 6px;border-radius:4px;font-size:11px;font-weight:700;color:var(--you-ink);background:color-mix(in srgb,var(--you) 14%,transparent)}
+.try .s-meta time{font-size:12px;color:var(--mute)}
+.try .s-re{display:block;margin:2px 0;padding-left:8px;overflow:hidden;border-left:3px solid var(--line);font-size:13px;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
+.try .s-ol{margin:4px 0;padding-left:24px;list-style:decimal}
+.try .s-opts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.try .s-opt{min-height:30px;padding:2px 12px;font-weight:600}
+.try .s-opt.chosen{border-color:var(--done);color:var(--done-ink);background:color-mix(in srgb,var(--done) 16%,transparent);opacity:1}
+.try .s-ack{font-size:12px;line-height:18px;color:var(--mute)}
+.try .s-ack[data-a=done]{font-weight:700;color:var(--done-ink)}
+/* a card inside a message: a table, a live status, a block of code with Run, a chart */
+.try .s-card{margin:8px 0;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.try .s-card-top{display:flex;align-items:center;gap:4px;min-height:34px;padding:2px 6px 2px 12px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--mute);background:var(--soft)}
+.try .s-card-top span{flex:1}
+.try .s-tr{display:grid;grid-template-columns:1fr 1fr 1.5fr;border-bottom:1px solid var(--line);font-size:14px;line-height:1.4}
+.try .s-tr:last-child{border:0}
+.try .s-tr:nth-child(odd){background:color-mix(in srgb,var(--soft) 50%,transparent)}
+.try .s-tr:first-child{font-weight:700;background:var(--soft)}
+.try .s-tr span{padding:7px 12px}
+.try .s-live .s-card{border-color:color-mix(in srgb,var(--build) 45%,var(--line))}
+.try .s-live .s-card.fin{border-color:color-mix(in srgb,var(--done) 45%,var(--line))}
+.try .s-status{padding:10px 14px 12px}
+.try .s-status-head{display:flex;align-items:center;gap:8px;font-size:15px}
+.try .s-status-head span,.try .s-status p{font-size:13px;color:var(--mute)}
+.try .s-status p{margin-top:10px}
+.try .s-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.try .s-dot.c-r{animation:s-pulse 1.6s ease-in-out infinite}
+@keyframes s-pulse{0%,100%{box-shadow:0 0 0 0 rgba(47,115,201,.45)}50%{box-shadow:0 0 0 6px rgba(47,115,201,0)}}
+.try .s-progress{height:6px;margin:10px 0 4px;overflow:hidden;border-radius:3px;background:var(--soft)}
+.try .s-progress i{display:block;height:100%;border-radius:3px;background:var(--build);transition:width .9s ease}
+.try .fin .s-progress i{background:var(--done)}
+.try .s-lines{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:4px 10px;margin-top:10px;font-size:14px}
+.try .s-lines b{font-weight:600}
+.try .s-lines span{color:var(--mute)}
+.try .s-lines .fin{color:var(--done-ink)}
+.try .s-code .s-card-top span{font:600 11.5px var(--mono)}
+.try .s-pre{padding:10px 12px;overflow-x:auto;font:13px/1.5 var(--mono);white-space:pre}
+.try .s-run{display:inline-flex;align-items:center;gap:5px;min-height:26px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:700;color:var(--send)}
+.try .s-run:not(:disabled):hover{background:var(--bg)}
+.try .s-run:disabled{color:var(--mute);cursor:default}
+.try .s-run[data-r=ok]{color:var(--done-ink)}
+.try .s-bars{display:flex;gap:10px;height:150px;padding:14px 14px 0}
+.try .s-bars div{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;gap:3px;padding-bottom:24px}
+.try .s-bars i{width:30%;max-width:34px;border-radius:3px 3px 0 0;background:#2a78d6}
+.try .s-bars i+i,.try .s-legend i+i{background:#eb6834}
+.try .s-bars span{position:absolute;inset:auto 0 0;padding-top:3px;border-top:1px solid var(--line);font-size:12px;text-align:center;color:var(--mute)}
+.try .s-legend{display:flex;align-items:center;gap:6px;padding:8px 14px 10px;font-size:12.5px;font-weight:600}
+.try .s-legend i{width:10px;height:10px;border-radius:3px;background:#2a78d6}
+.try .s-legend i+i{margin-left:12px}
+/* the reply box is drawn, not live: typing is not part of the demo */
+.try .s-composer{padding:0 20px 14px}
+.try .s-box{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0 8px;padding:10px 6px 6px 12px;border:1px solid var(--line-strong);border-radius:10px;color:var(--mute)}
+.try .s-box span{grid-column:1/-1;padding-bottom:8px}
+.try .s-box small{font-size:12px}
+.try .s-box i{display:grid;place-items:center;width:40px;height:32px;border-radius:7px;background:var(--soft)}
+/* the notice with Undo (its line drains for the four seconds the answer waits), and the dialog of a run block */
+.try .s-toasts{position:absolute;z-index:6;top:10px;right:8px;width:min(380px,100% - 16px)}
+.try .s-toast{--focus:#9dd0ff;position:relative;display:flex;align-items:center;gap:12px;padding:8px 14px;overflow:hidden;border:1px solid #ffffff26;border-radius:10px;font-size:14px;color:#fff;background:#1d1c1d;box-shadow:0 6px 24px #00000059;animation:s-toast .16s ease-out}
+.try .s-toast span{flex:1;min-width:0}
+.try .s-undo{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#9dd0ff}
+.try .s-undo kbd{min-width:16px;padding:1px 4px;border:1px solid #ffffff59;border-bottom-width:2px;border-radius:4px;font:11px/1.3 var(--mono);color:#fff;background:#ffffff1f}
+.try .s-toast i{position:absolute;inset:auto 0 0;height:3px;background:var(--blush);transform-origin:left;animation:s-drain 4s linear forwards}
+@keyframes s-toast{from{opacity:0;transform:translateY(-6px)}}
+@keyframes s-drain{to{transform:scaleX(0)}}
+.try .s-overlay{position:absolute;inset:0;z-index:8;display:flex;align-items:flex-start;justify-content:center;padding:72px 16px 16px;background:#0000008c}
+.try .s-dialog{display:flex;flex-direction:column;width:560px;max-width:100%;max-height:100%;overflow:hidden;border-radius:12px;background:var(--bg);box-shadow:0 18px 70px #00000073}
+.try .s-dialog-top{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.try .s-dialog-top b{flex:1;padding-left:8px;font-size:17px;font-weight:800}
+.try .s-run-body{display:flex;flex-direction:column;gap:10px;padding:14px 16px 10px;overflow-y:auto}
+.try .s-cmd{padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;font:14px/1.55 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--soft)}
+.try .s-cmd span{display:block;padding-left:10px;border-left:3px solid var(--send)}
+.try .s-run-body p{font-size:13px;color:var(--mute)}
+.try .s-dialog-foot{display:flex;gap:10px;padding:10px 16px 14px;border-top:1px solid var(--line)}
+/* the line above the window keeps room for its longest words, so the window never jumps under a finger */
+@media (max-width:1279px){.try .s-say{min-height:2.8em}}
+@media (max-width:899px){.try .s-side{flex-basis:256px}.try .s-coach{grid-template-columns:minmax(0,1fr) auto}.try .s-say{grid-area:2/1/3/3}}
+/* a phone: the window is a phone, with one pane at a time and a finger's sizes */
+@media (max-width:639px){
+  .try{padding:60px 0 64px}
+  .try>.w{padding:0 10px}
+  .try .s-coach{margin-top:22px;padding:9px 9px 9px 14px}
+  .try .s-say{min-height:4.2em;font-size:15px}
+  .try .s-win{max-width:390px;border:7px solid #0d0a0f;border-radius:40px;background:#0d0a0f}
+  .try .s-chrome,.try .s-tip,.try .s-num,.try .s-undo kbd,.try .s-box small,.try .s-tl{display:none}
+  .try .s-app{height:min(690px,100vh - 170px);height:min(690px,100svh - 170px);min-height:500px;border-radius:33px;font-size:16px}
+  .try .s-side,.try .s-chat{position:absolute;inset:0;transition:transform .22s cubic-bezier(.2,.8,.2,1),visibility 0s linear 0s}
+  .try .s-app:not(.in-chat) .s-chat{visibility:hidden;transform:translateX(100%);transition-delay:0s,.22s}
+  .try .s-app.in-chat .s-side{visibility:hidden;transform:translateX(-22%);transition-delay:0s,.22s}
+  .try .s-jump{min-height:44px;font-size:16px}
+  .try .s-tool,.try .s-icon{width:44px;height:44px}
+  .try .s-sec-h{min-height:32px;font-size:14px}
+  .try .s-ch{gap:12px;min-height:60px;padding:8px 10px}
+  .try .s-ch .s-slot{flex-basis:38px;height:38px;border-radius:10px;font-size:16px}
+  .try .s-ch-note{font-size:14px}
+  .try .s-back{display:grid}
+  .try .s-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:0 2px;min-height:0;padding:2px 4px 8px}
+  .try .s-head-main{display:contents}
+  .try .s-head-title{grid-area:1/2}
+  .try .s-head .s-slot,.try .s-tid{display:none}
+  .try .s-head-status{grid-area:2/1/3/-1;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;margin:0;padding-inline:12px;overflow:hidden;font-size:14px;line-height:1.5}
+  .try .s-chip{display:inline-block;margin-right:6px;line-height:1.5}
+  .try .s-note{display:inline;white-space:normal}
+  .try .s-tasks-top{flex-wrap:wrap;gap:5px 8px;min-height:44px;padding:8px 12px 7px}
+  .try .s-tasks-line{order:1}
+  .try .s-caret{order:2}
+  .try .s-tbar{order:3;flex:0 0 100%;height:4px;border-radius:2px}
+  .try .s-pin{gap:6px;padding:8px 12px}
+  .try .s-btn,.try .s-opt{min-height:44px;padding-inline:16px}
+  .try .s-run{min-height:36px;padding:0 12px;font-size:13px}
+  .try .s-intro,.try .s-day{padding-inline:12px}
+  .try .s-msg{gap:8px;padding-inline:12px}
+  .try .s-tr{grid-template-columns:1fr 1fr 1.1fr}
+  .try .s-tr span{padding-inline:8px}
+  .try .s-pre{white-space:pre-wrap;overflow-wrap:anywhere}
+  .try .s-undo{min-height:44px;padding-inline:4px}
+  .try .s-composer{padding:0 8px 8px}
+  .try .s-box{padding:3px 3px 3px 14px;border-radius:22px}
+  .try .s-box span{grid-column:auto;padding:0}
+  .try .s-box i{width:38px;height:38px;border-radius:50%}
+  .try .s-toasts{top:64px;left:8px;right:8px;width:auto}
+  .try .s-overlay{padding:0}
+  .try .s-dialog{width:100%;height:100%;border-radius:0}
+}
+/* reduced motion: nothing slides, fills, drains or breathes; the ring that marks what to press stands still */
+@media (prefers-reduced-motion:reduce){.try,.try *,.try *::before,.try *::after{animation:none!important;transition:none!important}.try .s-hint{box-shadow:0 0 0 2px var(--blush)}}
+</style>
+<style id="sda">
+/* The story's motion: each step is a view timeline (--s1 to --s5, lifted to the section by timeline-scope), and the phone's
+   screens, the seven numbers and the step's text play along it. Opacity and transform only. */
+@supports (animation-timeline:view()) and (timeline-scope:--a){
+.story{timeline-scope:--s1,--s2,--s3,--s4,--s5}
+#s1{view-timeline-name:--s1,--st}#s2{view-timeline-name:--s2,--st}#s3{view-timeline-name:--s3,--st}#s4{view-timeline-name:--s4,--st}#s5{view-timeline-name:--s5,--st}
+.sgrid{animation:q1 linear both,q2 linear both,q3 linear both,q4 linear both,q5 linear both,u linear both,b linear both;
+  animation-timeline:--s1,--s2,--s3,--s4,--s5,--s3,--s4;
+  animation-range:entry 20% entry 75%,entry var(--r0) entry var(--r1),entry var(--r0) entry var(--r1),entry var(--r0) entry var(--r1),entry var(--r0) entry var(--r1),entry var(--r1) exit var(--r2),entry var(--r1) exit var(--r2)}
+.scr img{animation:linear both;animation-range:entry var(--r0) entry var(--r1)}
+.sl img{animation-name:sl;animation-timing-function:cubic-bezier(.4,0,.2,1)}.fd img{animation-name:fd}
+.n2 img{animation-timeline:--s2}.n3 img{animation-timeline:--s3}.n4 img{animation-timeline:--s4}.n5 img{animation-timeline:--s5}
+.t{animation:tin linear both,tout linear forwards;animation-timeline:--st,--st;animation-range:entry var(--t0) entry var(--t1),exit var(--t2) exit var(--t3)}
+#s5 .t{animation-name:tin,none}
+@keyframes q1{to{--q1:1}}@keyframes q2{to{--q2:1}}@keyframes q3{to{--q3:1}}@keyframes q4{to{--q4:1}}@keyframes q5{to{--q5:1}}
+@keyframes u{to{--u:1}}@keyframes b{to{--b:1}}
+@keyframes sl{from{transform:translateX(102%)}}
+@keyframes fd{from{opacity:0}}
+@keyframes tin{from{opacity:0;transform:translateY(calc(var(--mv)*44px))}}
+@keyframes tout{to{opacity:0;transform:translateY(calc(var(--mv)*-44px))}}
+/* reduced motion: nothing slides or fades, the screens and the notes simply change */
+@media (prefers-reduced-motion:reduce){.sgrid,.scr img,.t{animation-timing-function:step-end}}
+@media (prefers-reduced-motion:reduce) and (min-width:1000px){.t{animation:none}}
+@media (prefers-reduced-motion:reduce) and (max-width:999px){.story{--r0:0px;--r1:100px;--t0:0px;--t1:100px;--t3:100px}}
+}
+</style>
+<noscript><style>
+/* no scroll timelines and no script: the story is a plain stack, each step's text and then its screen */
+@supports not ((animation-timeline:view()) and (timeline-scope:--a)){.sgrid{display:block;padding:0 24px}.back,.fx,.snav{display:none}.lay{position:static;height:auto}
+  .scr .ph{position:static;margin:0 auto 56px;box-shadow:0 0 0 var(--bz) #0d0a0f}.step{min-height:0;padding:40px 0 24px}.t{position:static;margin:0 auto}}
+/* the demo to play with needs the script: without it the section is left out */
+.try{display:none}
+</style></noscript>
+<script>
+/* Scroll timelines drive the story. Without them, or with ?fallback=1, the class "fb" hands it to the script at the end. */
+if (!(window.CSS && CSS.supports && CSS.supports('(animation-timeline:view()) and (timeline-scope:--a)')) || /[?&]fallback=1/.test(location.search)) {
+  document.documentElement.className = 'fb'; document.getElementById('sda').remove();
+}
+/* For a review on a machine that asks for reduced motion: ?motion=1 drops the reduced-motion rules, so the motion shows. */
+var MOTION = /[?&]motion=1/.test(location.search);
+if (MOTION) [].forEach.call(document.styleSheets, function strip(o) {
+  for (var r = o.cssRules, i = r.length; i--;) { if (r[i].media && /reduced-motion/.test(r[i].media.mediaText)) o.deleteRule(i); else if (r[i].cssRules) strip(r[i]); }
+});
+</script>
+</head>
+<body id="top">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="mark" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#3b1e3f"/><path d="M256 150 136 370M256 150V370M256 150 376 370" stroke="#fff" stroke-width="28" stroke-linecap="round"/><circle cx="256" cy="150" r="70" fill="#e0306a"/><circle cx="136" cy="372" r="52" fill="#fff"/><circle cx="256" cy="372" r="52" fill="#fff"/><circle cx="376" cy="372" r="52" fill="#fff"/></symbol></svg>
+
+<header class="hero dark">
+<div class="w">
+  <nav class="bar" aria-label="Main">
+    <a class="brand" href="#top"><svg viewBox="0 0 512 512" aria-hidden="true"><use href="#mark"/></svg>Suda</a>
+    <span class="links"><a href="#features">Features</a><a href="#why">Why</a><a href="#install">Install</a></span>
+    <a class="btn ghost" href="https://github.com/udiNur/Suda">GitHub</a>
+  </nav>
+  <div class="top">
+    <div>
+      <!-- THE TAGLINE: written here and nowhere else. To swap it, change these three lines. -->
+      <h1><span>A topic is not an agent.</span> <em>One thread per topic, whoever does the work.</em></h1>
+      <p class="sub">Every thread says whose turn it is: on you, working or done. Any models, any orchestration.</p>
+      <div class="cmd">
+        <div class="cmdh">Terminal <button class="copy" type="button" data-copy="c1">Copy</button></div>
+<pre id="c1" tabindex="0" role="group" aria-label="Install commands">git clone https://github.com/udiNur/Suda.git suda
+cd suda
+python3 suda/threads.py install
+python3 suda/server.py</pre>
+      </div>
+      <p class="cta"><a class="btn rose" href="#install">Quick start</a><a class="btn ghost" href="#story">See it move</a></p>
+    </div>
+    <ul class="chips"><li>Any models, any orchestration</li><li>Phone and desktop</li><li>Runs on your machine</li></ul>
+    <div class="shots">
+      <div class="win"><div class="dots"><i></i><i></i><i></i></div><img src="assets/desktop.gif" width="1280" height="800" alt="Suda on a desktop: the thread list on the side and the open thread beside it"></div>
+      <div class="phone"><img src="assets/phone-cover.gif" width="360" height="840" alt="Suda on a phone: the list by whose turn it is"></div>
+    </div>
+  </div>
+</div>
+</header>
+
+<main>
+<section id="story" class="story dark" aria-labelledby="sh">
+<div class="w sintro">
+  <p class="eye">See it move</p>
+  <h2 id="sh">Running agents is easy. <em>Keeping up is hard.</em></h2>
+  <p class="lead">Scroll to follow a topic from the list to done.</p>
+  <a class="skip" href="#features">Skip the story</a> <a class="skip" href="#try" style="margin-left:18px">Try it yourself</a>
+</div>
+<div class="sgrid">
+  <div class="lay back" aria-hidden="true">
+    <i class="glow gy"></i><i class="glow gw"></i><i class="glow gd"></i>
+    <div class="rail"><span class="pill p-you">On you</span><span class="pill p-work">Working</span><span class="pill p-done">Done</span></div>
+    <div class="ph bez"></div>
+  </div>
+
+  <article class="step" id="s1"><div class="t">
+    <p class="k">1 / 5</p>
+    <h3>Every thread says whose turn it is</h3>
+    <p class="x">One thread per topic, from the first request to the finished work.</p>
+    <ul>
+      <li><span class="pill p-you">On you</span>An agent asks a question.</li>
+      <li><span class="pill p-work">Working</span>An agent picks up your reply.</li>
+      <li><span class="pill p-done">Done</span>An agent finishes the work.</li>
+    </ul>
+  </div></article>
+  <figure class="lay scr"><div class="ph"><img src="assets/scroll-1.png" width="390" height="844" alt="Suda on a phone: the thread list in three groups, On you, In progress and Completed"></div></figure>
+
+  <article class="step" id="s2"><div class="t">
+    <p class="k">2 / 5</p>
+    <h3>Open a topic: its tasks, its question, its answer</h3>
+    <p>Each request is a task with an owner and a status. The question stays attached, with its own buttons, and the agent answers with a table or a diff, not only text.</p>
+  </div></article>
+  <figure class="lay scr sl n2"><div class="ph"><img src="assets/scroll-2.png" width="390" height="844" alt="An open thread: the tasks bar, an open question with three answer buttons, a table of checks and a diff"></div></figure>
+
+  <article class="step" id="s3"><div class="t">
+    <p class="k">3 / 5</p>
+    <h3>Answer in one tap, four seconds to undo</h3>
+    <p>Buttons with the agent's recommendation. The reply waits four seconds, and Undo (or Esc) takes it back.</p>
+  </div></article>
+  <figure class="lay scr fd n3"><div class="ph"><img src="assets/scroll-3.png" width="390" height="844" alt="One tap: a toast says Chosen: Ship behind a flag, with Undo, and the answer waits to be sent"></div></figure>
+
+  <article class="step" id="s4"><div class="t">
+    <p class="k">4 / 5</p>
+    <h3>Agents keep working. A live card updates in place</h3>
+    <p>Progress notifies nobody. One card updates in place, not a new message for every step. Nothing is on you while it runs.</p>
+  </div></article>
+  <figure class="lay scr sl n4"><div class="ph"><img src="assets/scroll-4.png" width="390" height="844" alt="An agent at work: a live status card for a rollout with a progress bar, and a grouped question under it"></div></figure>
+
+  <article class="step" id="s5"><div class="t">
+    <p class="k">5 / 5</p>
+    <h3>Done: the answer, and the thread goes quiet</h3>
+    <p>The numbers as a chart. A finished thread goes quiet and archives itself once nothing in it is open.</p>
+  </div></article>
+  <figure class="lay scr sl n5"><div class="ph"><img src="assets/scroll-5.png" width="390" height="844" alt="A completed thread: the answer as a bar chart of monthly costs, with Close now and Keep open"></div></figure>
+
+  <div class="lay fx" aria-hidden="true"><div class="ph">
+    <i class="tap"></i>
+    <span class="co c1" style="top:16.5%"><i class="d"></i>Waiting for you</span>
+    <span class="co c1" style="top:67.7%;--i:1"><i class="d" style="background:var(--amber)"></i>Agents at work</span>
+    <span class="co c1" style="top:88.7%;--i:2"><i class="d" style="background:var(--green)"></i>Nothing left open</span>
+    <span class="co c2" style="top:11.2%">Tasks</span>
+    <span class="co c2" style="top:22%;--i:1">Open question</span>
+    <span class="co c2" style="top:46%;--i:2">Table</span>
+    <span class="co c2" style="top:66%;--i:3">Diff</span>
+    <span class="co c3 undo" style="top:13.5%;--i:1">4 s to undo<i></i></span>
+    <span class="co c3 hot" style="top:31.4%">1 tap</span>
+    <span class="co c4" style="top:52%">Live card<span class="pb"><i></i></span></span>
+    <span class="co c4" style="top:12%;--i:1">Nothing on you</span>
+    <span class="co c5 ok" style="top:6.9%">Completed</span>
+    <span class="co c5" style="top:18.4%;--i:1">Close or keep open</span>
+    <span class="co c5" style="top:65%;--i:2">Answer as a chart</span>
+  </div></div>
+  <nav class="lay snav" aria-label="Story steps">
+    <a class="c1" href="#s1" aria-label="Step 1: whose turn it is"><i></i></a>
+    <a class="c2" href="#s2" aria-label="Step 2: open a topic"><i></i></a>
+    <a class="c3" href="#s3" aria-label="Step 3: answer in one tap"><i></i></a>
+    <a class="c4" href="#s4" aria-label="Step 4: agents keep working"><i></i></a>
+    <a class="c5" href="#s5" aria-label="Step 5: done"><i></i></a>
+  </nav>
+</div>
+</section>
+
+<!-- Try it: a scripted copy of the app (the script at the end of the page plays it). Invented content; nothing is sent. -->
+<section id="try" class="try dark" data-turn="you" aria-labelledby="th">
+<div class="w">
+  <p class="eye">Interactive demo</p>
+  <h2 id="th">Try it</h2>
+  <p class="lead">Tap a topic. Answer. Watch it move.</p>
+  <div class="s-coach">
+    <ol class="s-steps" aria-hidden="true"><li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li></ol>
+    <p class="s-say" role="status" aria-live="polite"></p>
+    <button class="s-again" data-act="again">Start over</button>
+  </div>
+  <div class="s-win">
+    <div class="s-chrome" aria-hidden="true"><i></i><i></i><i></i><span>127.0.0.1:8767/threads/suda.html</span></div>
+    <div class="s-app" role="group" aria-label="A demo of Suda, with invented topics" tabindex="-1">
+      <div class="s-side">
+        <div class="s-side-head"><b class="s-logo">Suda</b><span class="s-you-count"></span><span class="s-conn">Connected</span></div>
+        <div class="s-tools" aria-hidden="true">
+          <span class="s-jump"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>Go to a topic</span>
+          <span class="s-tool"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></span>
+        </div>
+        <nav class="s-list" aria-label="Topics">
+          <div class="s-sec" data-s="you"><p class="s-sec-h" id="tsy"><i></i>On you <b></b></p><ul aria-labelledby="tsy"></ul></div>
+          <div class="s-sec" data-s="work"><p class="s-sec-h" id="tsw"><i></i>In progress <b></b><em>Nothing to do on your side</em></p><ul aria-labelledby="tsw"></ul></div>
+          <div class="s-sec" data-s="done"><p class="s-sec-h" id="tsd"><i></i>Completed <b></b><em>Nothing left open</em></p><ul aria-labelledby="tsd"></ul></div>
+        </nav>
+        <p class="s-side-foot" aria-hidden="true"><u>Settings</u></p>
+      </div>
+      <div class="s-chat">
+        <div class="s-empty"><span class="s-tip" aria-hidden="true">Start here</span><p>Choose a topic from the list</p></div>
+        <div class="s-pane" hidden>
+          <div class="s-head">
+            <button class="s-icon s-back" data-act="back" aria-label="Back to the topic list"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 4-7 7 7 7"/></svg></button>
+            <div class="s-head-main">
+              <div class="s-head-title"><span class="s-slot"></span><h3 class="s-h" tabindex="-1"></h3><span class="s-tid"></span></div>
+              <div class="s-head-status"><span class="s-chip"></span><span class="s-note"></span></div>
+            </div>
+            <span class="s-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="11" r="6.5"/><path d="M10 7.5V11l2.4 1.6M4.2 3.6 2.2 5.4M15.8 3.6l2 1.8"/></svg></span>
+            <span class="s-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.2v.1"/></svg></span>
+          </div>
+          <div class="s-tasks">
+            <button class="s-tasks-top" data-act="tasks" aria-expanded="false" aria-controls="ttl"><span class="s-tbar"></span><span class="s-tasks-line"></span><i class="s-caret"></i></button>
+            <ul class="s-tasks-list" id="ttl" hidden></ul>
+          </div>
+          <div class="s-pin" hidden></div>
+          <div class="s-scroll" tabindex="0" role="region" aria-label="Messages"></div>
+          <div class="s-composer" aria-hidden="true" data-act="type"><div class="s-box"><span></span><small>Enter sends · Shift+Enter new line</small>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M6.5 10h7"/></svg>
+            <i><svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M16.5 9 2 2.5 5.5 9 2 15.5z"/></svg></i></div></div>
+        </div>
+      </div>
+      <div class="s-toasts"></div>
+      <div class="s-overlay" hidden>
+        <div class="s-dialog" role="alertdialog" aria-modal="true" aria-labelledby="trt" aria-describedby="trn">
+          <div class="s-dialog-top"><b id="trt">Run this command on your machine?</b><button class="s-icon" data-act="no" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l10 10M14 4 4 14"/></svg></button></div>
+          <div class="s-run-body">
+            <pre class="s-cmd" tabindex="0"><span>! make deploy ENV=staging VERSION=2.4.0</span></pre>
+            <p id="trn">Runs on your machine after you confirm. The page runs nothing: the tower checks that this is exactly the command it posted, runs it, and reports in the thread.</p>
+          </div>
+          <div class="s-dialog-foot"><button class="s-btn primary" data-act="ok">Run</button><button class="s-btn" data-act="no">Cancel</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="fine">A scripted demo with invented content: nothing is sent, stored or run. Keys: Tab and Enter, 1 to 3 to answer, Esc to undo.</p>
+</div>
+</section>
+
+<section id="features">
+<div class="w">
+  <p class="eye">Features</p>
+  <h2>One thread per topic, from the first request to the finished work</h2>
+  <p class="lead">The note is written for someone who will not open the thread ("Approve the staging deploy", never "There is an update").</p>
+  <div class="turns">
+    <div class="turn">
+      <h3><span class="pill p-you">On you</span></h3>
+      <ul><li><b>Release 2.4</b>Approve the staging deploy</li><li><b>Ticket 1042</b>Refund the second payment?</li></ul>
+    </div>
+    <div class="turn work">
+      <h3><span class="pill p-work">Working</span></h3>
+      <ul><li><b>Nightly export</b>Retrying 3 batches, nothing for you yet</li></ul>
+    </div>
+    <div class="turn done">
+      <h3><span class="pill p-done">Done</span></h3>
+      <ul><li><b>Cost report</b>Finished, summary inside</li></ul>
+    </div>
+  </div>
+  <div class="g3">
+    <div><h3>A thread is a topic, not an agent.</h3><p>Several agents on one topic, one agent in several, and threads with no agent at all: a support ticket, a reminder, a decision you owe someone.</p></div>
+    <div><h3>Tasks stay with the topic.</h3><p>Each request is a task with an owner and a status. Yours are shown apart, and the CLI refuses to mark a thread done while tasks are open (unless forced).</p></div>
+    <div><h3>Questions stay attached.</h3><p>Your "yes" lands on the button of the question it answers. Up to five open questions per thread, each with its own buttons.</p></div>
+    <div><h3>Quiet unless it is your turn.</h3><p>Progress notifies nobody. <i>On you</i> sends a browser notification (where you enabled them), unless the thread is muted or quiet hours are on. Snooze a thread until a time you choose.</p></div>
+    <div><h3>It ends.</h3><p>A finished thread goes quiet and archives itself once nothing in it is open.</p></div>
+    <div><h3>Agents continue from the record.</h3><p>A reply reaches an agent with the topic's summary and earlier messages, and the tasks are one command away.</p></div>
+  </div>
+</div>
+</section>
+
+<section id="why">
+<div class="w split">
+  <ol class="chat" aria-label="One chat with three agents">
+    <li><small>agent</small>Staging is green. Deploy 2.4?</li>
+    <li><small>agent</small>Ticket 1042: the customer paid twice. Refund?</li>
+    <li><small>agent</small>The nightly export failed again, 3 batches timed out.</li>
+    <li class="me"><small>you</small>yes</li>
+    <li><small>agent</small>Yes to the deploy, or to the refund?</li>
+  </ol>
+  <div>
+    <p class="eye">Why Suda</p>
+    <h2>Yes to what?</h2>
+    <p class="lead">I run 10 to 15 coding agents at once. In one chat their replies mix; with a window per agent you hunt for the one that waits for you.</p>
+    <p class="say">Most tools answer how to run agents. Suda answers what they need from you.</p>
+  </div>
+</div>
+</section>
+
+<section id="show">
+<div class="w">
+  <h2>Agents answer with more than text</h2>
+  <div class="six">
+    <figure class="f"><img src="assets/show-diagram.png" width="420" height="600" loading="lazy" alt="A Mermaid flowchart drawn inside a thread"><figcaption><b>Diagrams.</b> Mermaid flows, sequences and plans, with full screen and the source one tap away.</figcaption></figure>
+    <figure class="f"><img src="assets/show-diff.png" width="420" height="600" loading="lazy" alt="A diff viewer inside a thread, with a pull request chip under it"><figcaption><b>Diffs.</b> Changed words and line numbers, unchanged lines folded, or side by side.</figcaption></figure>
+    <figure class="f"><img src="assets/show-chart.png" width="420" height="600" loading="lazy" alt="A bar chart inside a thread"><figcaption><b>Charts.</b> The numbers as a chart or a table, with CSV and PNG export.</figcaption></figure>
+    <figure class="f"><img src="assets/show-page.png" width="420" height="600" loading="lazy" alt="A small interactive page an agent made, shown inside a thread"><figcaption><b>Interactive pages.</b> A working mock-up, in the thread or full screen, in a sandboxed frame with no network.</figcaption></figure>
+    <figure class="f"><img src="assets/show-widget.png" width="420" height="600" loading="lazy" alt="Sliders with live results inside a thread"><figcaption><b>What-if cards.</b> Move a slider and see the results change.</figcaption></figure>
+    <figure class="f"><img src="assets/show-status.png" width="420" height="600" loading="lazy" alt="A status card that updates in place"><figcaption><b>Live status.</b> One card that updates in place, not a new message for every step.</figcaption></figure>
+  </div>
+  <p class="fine">Also: tables that scroll and export, code with an exact copy button, pictures, carousels, video, long logs in a collapsed card (up to 20 MB), SVG drawings, next-step buttons inside a message, and short chips for pull requests, commits and other threads. All screenshots come from a demo board with invented content.</p>
+</div>
+</section>
+
+<section id="answer">
+<div class="w">
+  <h2>You answer with more than text</h2>
+  <div class="two">
+    <figure class="f"><div class="dots"><i></i><i></i><i></i></div><img src="assets/answer.gif" width="1280" height="800" loading="lazy" alt="Pressing an answer button, the undo toast, the answer sent"><figcaption><b>One tap.</b> Numbered buttons with the agent's recommendation. The reply waits four seconds, and Esc (or the button) takes it back.</figcaption></figure>
+    <figure class="f"><div class="dots"><i></i><i></i><i></i></div><img src="assets/run.gif" width="1280" height="800" loading="lazy" alt="A run block and its confirm dialog"><figcaption><b>Approve a command with &#9654;&#xFE0E;.</b> Read the exact command and confirm. The tower applies its rules, runs it on your machine and reports in the thread. No command runs in the browser.</figcaption></figure>
+  </div>
+  <div class="three">
+    <figure class="f"><img src="assets/show-ticks.png" width="420" height="600" loading="lazy" alt="A question with checkboxes in groups and recommended marks"><figcaption><b>Several decisions in one form.</b> Checkboxes in groups, with recommendations, a free note, and picture tiles for options you have to see.</figcaption></figure>
+    <figure class="f"><img src="assets/show-quote.png" width="420" height="600" loading="lazy" alt="A reply that quotes the exact words it answers, under a long log shown as a collapsed card"><figcaption><b>Point to the exact words.</b> Mark a passage and reply: the agent gets the marked words and the message they came from.</figcaption></figure>
+    <ul class="card">
+      <li><p><b>Speak.</b> The agent gets the transcript and the recording (needs a Soniox key and a secure page).</p></li>
+      <li><p><b>Show.</b> Pictures with captions. A log or a text file becomes a collapsed attachment.</p></li>
+      <li><p><b>Split.</b> Give a side issue its own thread, with a quote and a link back.</p></li>
+      <li><p><b>Know you were heard.</b> Under each message of yours: received, picked up, done.</p></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<section id="byo" class="dark">
+<div class="w">
+  <p class="eye">How it works</p>
+  <h2>Any models, any orchestration.</h2>
+  <p class="lead">You reply in the topic. One AI, the tower, carries each reply to the agent working on that topic, and the agents post results and questions straight into the thread. The tower is a go-between, not a boss: you never have to know which agent has which topic.</p>
+  <div class="g3">
+    <div class="card"><h3>Any agent.</h3><p>Any agent that can run a shell command takes part: it writes into threads with the <code>threads</code> CLI.</p></div>
+    <div class="card"><h3>Any models.</h3><p>Whatever model is behind an agent, it takes part the same way.</p></div>
+    <div class="card"><h3>Any orchestration.</h3><p>Suda starts no agents and owns no terminals. It needs one command that tells your tower "a reply waits" (<code>THREADS_NOTIFY_CMD</code>). Without it nothing is lost: the tower can read <code>threads pending</code> whenever it likes.</p></div>
+  </div>
+  <div class="flow" role="img" aria-label="How a reply travels. You reply, tap or approve in Suda, from a phone or a desktop. Suda tells the tower that a reply waits. The tower carries your words to your agents, on any models and any orchestration. Your agents post progress, questions and tasks into Suda, and Suda shows you only what needs you.">
+    <div class="n you"><b>You</b><span>phone or desktop</span></div>
+    <div class="e"><span class="fw">reply, tap, approve</span><span class="bk">only what needs you</span></div>
+    <div class="n suda"><b>Suda</b><span>one thread per topic</span></div>
+    <div class="e"><span class="fw">a reply waits</span></div>
+    <div class="n tower"><b>The tower</b><span>carries your replies</span></div>
+    <div class="e"><span class="fw">your words</span></div>
+    <div class="n agents"><b>Your agents</b><span>any models, any orchestration</span></div>
+    <div class="ret"><span>progress, questions, tasks</span></div>
+  </div>
+  <p class="fine">Tested so far on one setup: our agents run in <a href="https://github.com/Gaurav-Gosain/tuios">tuios</a>. With tuios and Claude Code, an optional hook (<code>live_hook.py</code>) also shows which agents are working on a thread right now.</p>
+</div>
+</section>
+
+<section id="screens">
+<div class="w">
+  <div class="pd">
+    <div>
+      <h2>Phone and desktop</h2>
+      <p class="lead"><b>Phone first.</b> One pane at a time. It is a web page you add to the home screen as an app.</p>
+      <p class="lead"><b>Wider screens.</b> The list beside the conversation, for example on the inner screen of a foldable.</p>
+      <p class="lead"><b>Languages.</b> The code and the demo are in English, left to right. A translation is a table in <code>suda/locales/</code> (Hebrew, right to left, ships in <code>suda/locales/he.json</code>).</p>
+    </div>
+    <div class="pair">
+      <div><img src="assets/phone-cover.gif" width="360" height="840" loading="lazy" alt="Suda on a phone: the list by whose turn it is, a thread with a table, its tasks, a diagram"></div>
+      <div><img src="assets/phone-inner.gif" width="750" height="835" loading="lazy" alt="The list beside the conversation on a wider phone screen"></div>
+    </div>
+  </div>
+  <figure class="f" style="margin-top:44px"><div class="dots"><i></i><i></i><i></i></div><img src="assets/desktop.gif" width="1280" height="800" loading="lazy" alt="Suda on a desktop: a release thread, a run block, a diagram, a log, a support ticket"><figcaption><b>Desktop.</b> The list on the side and the open thread beside it: here a release with its tasks bar and open question, a run block, a diagram, a long log, and a support ticket in its own space.</figcaption></figure>
+</div>
+</section>
+
+<section id="threads">
+<div class="w">
+  <h2>Move through many threads</h2>
+  <div class="mt">
+    <figure class="f"><div class="dots"><i></i><i></i><i></i></div><img src="assets/palette.gif" width="1280" height="800" loading="lazy" alt="The command palette searching for deploy"><figcaption><b>&#8984;K: every thread and every command.</b> Search, jump to a thread or change a setting. Each thread shows how long ago it last changed.</figcaption></figure>
+    <div>
+      <div class="card"><h3>Slash commands.</h3><p>Type <code>/</code> in the reply box: <code>/status</code>, <code>/explain</code> and <code>/review</code> go to the agents; <code>/done</code>, <code>/s</code> (snooze), <code>/urgent</code>, <code>/mute</code>, <code>/rename</code> and <code>/task</code> act on the thread.</p></div>
+      <div class="card"><h3>Many threads at once.</h3><p>Choose several (Cmd or Ctrl click, Shift click for a range, a long press on the phone), then mark read, snooze, merge or close.</p></div>
+      <div class="card"><h3>Spaces and more.</h3><p>Spaces (for example a support space with its own threads), urgent threads first, merge, reactions, light and dark themes, and keyboard shortcuts (<code>?</code> shows them).</p></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="security">
+<div class="w split" style="align-items:start">
+  <div>
+    <p class="eye">Security</p>
+    <h2>Runs on your machine</h2>
+    <p class="lead">Python standard library, no dependencies, no build step, one HTML page, a server on 127.0.0.1 only. MIT.</p>
+    <ul class="badges" aria-label="At a glance">
+      <li><span>license</span><b class="p-you">MIT</b></li>
+      <li><span>python</span><b class="p-you">3.9+</b></li>
+      <li><span>dependencies</span><b class="p-done">none</b></li>
+      <li><span>binds</span><b class="p-done">127.0.0.1 only</b></li>
+      <li><span>any models</span><b class="p-work">any orchestration</b></li>
+      <li><span>made for</span><b class="p-you">phone + desktop</b></li>
+    </ul>
+  </div>
+  <div>
+    <ul class="checks">
+      <li>The server listens on <b>127.0.0.1 only</b>, checks the <code>Host</code> header (DNS rebinding) and the <code>Origin</code> of every write (CSRF), and serves only its own board folder.</li>
+      <li><b>No command runs in the browser.</b> A &#9654;&#xFE0E; run block is checked against the exact text stored for it (a SHA-256 of the block), and only the tower runs it.</li>
+      <li>Agent-made pages run in a <b>sandboxed frame with no network</b>. Diagrams are drawn in a sandboxed frame and shown as images.</li>
+      <li>Private keys, push subscriptions, settings and backups live in a <b>private folder that is never served</b>.</li>
+    </ul>
+    <p class="fine">Details, and how to report a problem, in <a href="https://github.com/udiNur/Suda/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+  </div>
+</div>
+</section>
+
+<section id="compare">
+<div class="w">
+  <p class="eye">Built around the topic</p>
+  <h2>How it compares</h2>
+  <p class="lead">We use or have tried most of these, some of them every day, and they are good at what they do. From our own use and their own pages, November 2026.</p>
+  <table>
+    <thead><tr><th scope="col"><span class="vh">Tool</span></th><th scope="col">Built around</th><th scope="col">What Suda adds</th></tr></thead>
+    <tbody>
+      <tr><th scope="row"><a href="https://github.com/Gaurav-Gosain/tuios">tuios</a></th><td><b>The pane.</b> A terminal window manager that knows what your agents are doing: sessions that stay alive, agent states, agents that message each other. It is where our agents run.</td><td>The topic, on top of the pane.</td></tr>
+      <tr><th scope="row"><a href="https://github.com/herdrdev/herdr">herdr</a></th><td><b>The agent.</b> A runtime for coding agents that shows which agent is working or blocked, across machines and from a phone.</td><td>Which topic needs me, and what did we decide in it?</td></tr>
+      <tr><th scope="row">Claude Squad, Conductor, Sculptor</th><td><b>The agent session and its code.</b> Several coding agents in parallel, each in its own worktree or container, with review of their changes.</td><td>A home for a topic that spans several agents, or has no code at all.</td></tr>
+      <tr><th scope="row">OpenHands</th><td><b>Conversations with agents.</b> A self-hosted control center for coding agents and automations.</td><td>One thread per topic, across agents.</td></tr>
+      <tr><th scope="row">Devin</th><td><b>Its own agent.</b> A hosted autonomous engineer you can reach from a team chat.</td><td>No agent of its own. Suda works with the ones you already run.</td></tr>
+      <tr><th scope="row">Linear with agents</th><td><b>The issue.</b> A tracker for a team's planned work, where agents answer in the issue's comments. The closest in spirit.</td><td>One person's live conversation, including topics that will never be an issue.</td></tr>
+      <tr><th scope="row">Slack, or any team chat with bots</th><td><b>The channel.</b> The feel we wanted, and Suda borrows it.</td><td>Whose turn it is and what is still open, with no bot or token per agent, on your own machine.</td></tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<section id="setup">
+<div class="w">
+  <p class="eye">Our setup</p>
+  <h2>What we run every day</h2>
+  <p class="lead">A starting point, if you want one. Suda works without any of them, and we are not affiliated with them.</p>
+  <div class="g3">
+    <div class="card"><h3><a href="https://github.com/Gaurav-Gosain/tuios">tuios</a></h3><p>Where our agents run: a terminal window manager that knows what each agent is doing. With it, <code>live_hook.py</code> shows which agents are working on a thread right now.</p></div>
+    <div class="card"><h3><a href="https://github.com/anthropics/claude-code">Claude Code</a></h3><p>The coding agents themselves.</p></div>
+    <div class="card"><h3><a href="https://tailscale.com">Tailscale</a></h3><p>Suda on your phone from anywhere, over your own private network, while the server stays on 127.0.0.1 behind a gateway.</p></div>
+  </div>
+</div>
+</section>
+
+<section id="install" class="dark">
+<div class="w split" style="align-items:start">
+  <div>
+    <p class="eye">Quick start</p>
+    <h2>Stop hunting windows. Answer the topic.</h2>
+    <div class="cmd">
+      <div class="cmdh">Terminal <button class="copy" type="button" data-copy="c2">Copy</button></div>
+<pre id="c2" tabindex="0" role="group" aria-label="Install commands, with notes">git clone https://github.com/udiNur/Suda.git suda
+cd suda
+python3 suda/threads.py install   <i># creates the board</i>
+python3 suda/server.py            <i># serves it on 127.0.0.1</i></pre>
+    </div>
+    <p class="fine">Then open <code>http://127.0.0.1:8767/threads/suda.html</code>. Needs Python 3.9 or newer (standard library only) and a modern browser. macOS and Linux.</p>
+    <p class="cta"><a class="btn rose" href="https://github.com/udiNur/Suda">Get Suda on GitHub</a><a class="btn ghost" href="https://github.com/udiNur/Suda/blob/main/README.md">Read the README</a></p>
+  </div>
+  <ul class="next">
+    <li><b>Look around first</b><code>python3 docs/demo/demo.py</code> prints the address of a throwaway demo board.</li>
+    <li><b>Connect your agents</b>Give them <a href="https://github.com/udiNur/Suda/blob/main/suda/SKILL.md">SKILL.md</a> as a skill. They write with the <code>threads</code> CLI.</li>
+    <li><b>Hear about replies</b>Set <code>THREADS_NOTIFY_CMD</code> so your tower learns that a reply waits.</li>
+    <li><b>Open it on your phone</b>Keep the server on 127.0.0.1 and put a gateway in front of it.</li>
+    <li><b>Change it</b>Tests come first: the suites and the rules for a change are in <a href="https://github.com/udiNur/Suda/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</li>
+  </ul>
+</div>
+</section>
+</main>
+
+<footer class="foot">
+<div class="w">
+  <a class="brand" href="#top"><svg viewBox="0 0 512 512" aria-hidden="true"><use href="#mark"/></svg>Suda</a>
+  <nav aria-label="Footer">
+    <a href="https://github.com/udiNur/Suda">GitHub</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/LICENSE">MIT license</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/SECURITY.md">Security</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.md">README</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.he.md" hreflang="he">README in Hebrew</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.zh-CN.md" hreflang="zh-CN">README in Chinese</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.ja.md" hreflang="ja">README in Japanese</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.ko.md" hreflang="ko">README in Korean</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.pt-BR.md" hreflang="pt-BR">README in Brazilian Portuguese</a>
+    <a href="https://github.com/udiNur/Suda/blob/main/README.es.md" hreflang="es">README in Spanish</a>
+  </nav>
+  <p>This page is one HTML file: no framework, no CDN, no font file, no tracking, no cookies.</p>
+</div>
+</footer>
+
+<script>
+/* The story's fallback, for a browser without scroll timelines: one IntersectionObserver names the step that crosses a line
+   in the window (lower on a phone, where the text waits at the bottom), and the CSS under ".fb" moves the parts. */
+(function () {
+  if (document.documentElement.className !== 'fb' || !window.IntersectionObserver) return;
+  var steps = [].slice.call(document.querySelectorAll('.step')), scr = document.querySelectorAll('.scr'),
+      g = document.querySelector('.sgrid').style, mq = matchMedia('(max-width:999px)'), io;
+  function set(n) {
+    steps.forEach(function (s, i) { s.classList.toggle('in', i + 1 === n); });
+    scr.forEach(function (s, i) { s.classList.toggle('on', i < n); });
+    for (var k = 1; k < 6; k++) g.setProperty('--q' + k, k <= n ? 1 : 0);
+    g.setProperty('--u', n === 3 ? 1 : 0); g.setProperty('--b', n > 3 ? 1 : 0);
+  }
+  function watch() {
+    if (io) io.disconnect();
+    io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) set(steps.indexOf(e.target) + 1); });
+    }, {rootMargin: mq.matches ? '-86% 0px -14% 0px' : '-55% 0px -45% 0px'});
+    steps.forEach(function (s) { io.observe(s); });
+  }
+  set(0); watch(); mq.addEventListener('change', watch);
+})();
+/* The copy buttons. */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-copy]'); if (!b) return;
+  var pre = document.getElementById(b.dataset.copy), pick = function () { getSelection().selectAllChildren(pre); };
+  if (!navigator.clipboard) return pick();
+  navigator.clipboard.writeText(pre.textContent).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500); }, pick);
+});
+/* Reduced motion: each GIF stops on its first frame and gets a Play button. */
+if (!MOTION && matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('img[src$=".gif"]').forEach(function (g) {
+  var gif = g.src, still = function () {
+    var c = document.createElement('canvas'), b = document.createElement('button');
+    c.width = g.naturalWidth; c.height = g.naturalHeight; c.getContext('2d').drawImage(g, 0, 0);
+    try { g.src = c.toDataURL(); } catch (x) { return; }
+    b.className = 'copy play'; b.type = 'button'; b.textContent = 'Play'; b.onclick = function () { g.src = gif; b.remove(); }; g.after(b);
+  };
+  if (g.complete && g.naturalWidth) still(); else g.addEventListener('load', still, {once: true});
+});
+/* Try it: a scripted copy of the app. One small state (the open topic, and how far the release topic has moved) is drawn
+   again after every change, and timers play the agents' side. Nothing is sent, stored or run. */
+(function () {
+  var sec = document.getElementById('try'), app = sec && sec.querySelector('.s-app');
+  if (!app) return;
+  function $(q) { return sec.querySelector(q); }
+  function all(q) { return [].slice.call(sec.querySelectorAll(q)); }
+  var still = !MOTION && matchMedia('(prefers-reduced-motion: reduce)').matches,
+      side = $('.s-side'), chat = $('.s-chat'), pin = $('.s-pin'), scroll = $('.s-scroll'), toasts = $('.s-toasts'), over = $('.s-overlay'), title = $('.s-h'),
+      S, uls = {}, timers = [], armed = false, ready = false, said = '',
+      Q = 'Ship 2.4 today, or wait for the QA run?', OPT = ['Ship today', 'Wait for QA', 'Ship behind a flag'],
+      LABEL = {you: 'On you', work: 'In progress', done: 'Completed'},
+      WHO = {ag: ['Ag', 'Agent', 'fork'], tw: ['To', 'Tower', 'tower'], me: ['Da', 'Dana']},
+      PLAY = '<svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.5 4.2v11.6a.8.8 0 0 0 1.2.7l9.2-5.8a.8.8 0 0 0 0-1.4L7.7 3.5a.8.8 0 0 0-1.2.7z"/></svg>',
+      /* The release topic's stages (S.st): 0 it asks, 1 he answered and can still cancel, 2 received, 3 an agent picked it
+         up, 4 a command waits for his OK, 5 it runs, 6 done. Its five tasks at each: d done, b building, w in progress, y on you, t to do. */
+      TASKS = ['dbwyt', 'dbwyt', 'dbwdt', 'ddwdw', 'ddwdy', 'ddddb', 'ddddd'],
+      TASK = [['Retry policy for declined cards', 'Agent'], ['Integration tests on the sandbox', 'Agent'], ['Release notes', 'Agent'], ['Decide when 2.4 ships', 'Dana'], ['Deploy 2.4 to staging', 'Tower']],
+      STATE = {d: 'Completed', b: 'Building', w: 'In progress', y: 'On you', t: 'To do'},
+      ACK = ['', 'Sending in a moment. You can still cancel.', '✓ Received', '✓✓ Picked up', '✓✓ Picked up', '✓✓ Picked up', '✅ Done'],
+      /* per answer: the card's name, its first line (label, running, done), the last words */
+      CARD = [['Shipping 2.4 today', 'Notes', 'writing', 'published', '2.4 goes out to everyone today at 18:00.'],
+              ['QA run for 2.4', 'QA plan', 'collecting cases', '38 cases ready', 'The QA run on staging is green: 2.4 ships tomorrow morning.'],
+              ['2.4 behind a flag', 'Flag', 'adding', 'added, off by default', 'Checkout retries are live behind the flag, off by default.']],
+      TABLE = card('Table · 4 lines', '<div role="table" aria-label="Release checks">' + [['Check', 'Result', 'Notes'], ['Unit tests', '412 passed', '3 new for the retry policy'],
+        ['Integration', '38 passed', 'sandbox card network'], ['Load test', 'p95 180 ms', 'was 210 ms'], ['Error budget', '0.4% used', 'well inside']].map(function (r, i) {
+          return '<div class="s-tr" role="row">' + r.map(function (c) { return '<span role="' + (i ? 'cell' : 'columnheader') + '">' + c + '</span>'; }).join('') + '</div>';
+        }).join('') + '</div>'),
+      CHART = card('Chart · Monthly cost', '<div class="s-bars" role="img" aria-label="Monthly cost in dollars. September: 4,120 on demand. October: 3,980 on demand, 310 on Spot. November: 1,650 on demand, 720 on Spot.">' +
+        [['September', 4120, 0], ['October', 3980, 310], ['November', 1650, 720]].map(function (m) {
+          return '<div><i style="height:' + m[1] / 45 + '%"></i><i style="height:' + m[2] / 45 + '%"></i><span>' + m[0] + '</span></div>';
+        }).join('') + '</div><p class="s-legend"><i></i>On demand<i></i>Spot</p>'),
+      /* the topics: s is whose turn (the release topic's comes from its stage), ts the order inside a group */
+      T = {
+        rel: {n: 1, id: 'demo-release', title: 'Release 2.4: checkout retries', at: '13:56', sum: 'Retry declined card payments with backoff'},
+        onb: {n: 6, id: 'demo-onboarding', title: 'Onboarding copy', at: '13:41', sum: 'The first screen a new user sees', s: 'you', badge: 1, note: 'Pick one of the two headlines', when: '2 min', ts: 8,
+          body: wrap(msg('ag', '13:41', '<p>Two headlines for the first screen:</p><ol class="s-ol"><li><b>Everything your agents need from you, in one place</b></li><li><b>Answer your agents from your phone</b></li></ol>'))},
+        mig: {n: 13, id: 'demo-migration', title: 'Orders table migration', at: '13:20', sum: 'Move the orders table to the new schema', s: 'work', note: 'Copying rows, nothing for you yet', when: '6 min', ts: 7,
+          body: wrap(msg('ag', '13:20', '<div class="s-live">' + status('Orders table migration', 0, 60, [['d', 'Backup', 'done in 6 min'], ['r', 'Copy rows', '3.1 of 5.2 million'],
+            ['w', 'Check counts', 'waiting'], ['w', 'Switch reads', 'waiting']], 'Nothing for you yet: this card updates in place') + '</div>'))},
+        nig: {n: 4, id: 'demo-nightly', title: 'Nightly export failed', at: '13:02', sum: 'Three batches timed out upstream', s: 'work', note: 'You answered «Retry only the upstream calls», an agent is working on it', when: '12 min', ts: 6,
+          body: wrap(msg('ag', '13:02', '<p>The nightly export failed on three batches, all of them upstream timeouts after 30 s. Retry only the upstream calls, or the whole export?</p>', 1)) +
+            wrap(msg('me', '13:05', '<p>Retry only the upstream calls</p><div class="s-ack">✓✓ Picked up</div>'))},
+        cos: {n: 14, id: 'demo-costs', title: 'Cloud costs: November', at: '11:30', sum: 'Where the cloud bill went this month', s: 'done', note: 'Bill cut by more than half', when: '1 h', ts: 5,
+          body: wrap(msg('ag', '11:30', '<p>Moving the workers to Spot cut the bill by more than half. Month by month:</p>' + CHART))},
+        inv: {n: 7, id: 'demo-billing', title: 'Invoice PDF layout', at: '10:02', sum: 'Totals on one page', s: 'done', note: 'Merged and deployed', when: '3 h', ts: 4,
+          body: wrap(msg('me', '10:05', '<p>The new layout looks right. Merge it.</p><div class="s-ack" data-a="done">✅ Done</div>')) + wrap(msg('ag', '10:31', '<p>Merged and deployed.</p>'))}
+      },
+      /* the release topic's messages: the stage each one appears at, and its words */
+      MSG = [
+        [0, function () { return msg('ag', '13:56', '<p><b>Release 2.4 is ready for a decision.</b></p>' + TABLE); }],
+        [0, function () { return msg('ag', '13:57', '<p>' + Q + '</p><div class="s-opts">' + opts('s-opt') + '</div>', 1); }],
+        [1, function () { return msg('me', '13:58', '<span class="s-re">↩︎ In reply to the question: ' + Q + '</span><p>' + OPT[S.pick] + '</p><div class="s-ack"></div>'); }],
+        [3, function () { return msg('ag', '13:58', '<div class="s-live"></div>'); }],
+        [4, function () { return msg('tw', '14:02', '<p>Staging is ready. Approve the command below to deploy: it runs on your machine only after you confirm.</p>' +
+          '<div class="s-card s-code"><div class="s-card-top"><span>sh</span><button class="s-run" data-act="run"></button></div><pre class="s-pre">! make deploy ENV=staging VERSION=2.4.0</pre></div>'); }],
+        [5.5, function () { return msg('tw', '14:03', '<p><b>Deployed to staging, smoke tests passed.</b> ' + CARD[S.pick][4] + '</p>'); }]
+      ];
+
+  function msg(who, at, body, q) {
+    var w = WHO[who];
+    return '<span class="s-av" data-w="' + who + '" aria-hidden="true">' + w[0] + '</span><div class="s-content"><div class="s-meta"><span class="s-name">' + w[1] + '</span>' +
+      (w[2] ? '<span class="s-tag">' + w[2] + '</span>' : '') + (q ? '<span class="s-q-tag">Question</span>' : '') + '<time>' + at + '</time></div>' + body + '</div>';
+  }
+  function wrap(html) { return '<div class="s-msg">' + html + '</div>'; }
+  function card(top, body, cls) { return '<div class="s-card ' + (cls || '') + '"><div class="s-card-top"><span>' + top + '</span></div>' + body + '</div>'; }
+  function status(name, fin, pct, rows, note) {  // a live status card; a row is [d done | r running | w waiting, label, value]
+    return card('Status · live', '<div class="s-status"><div class="s-status-head"><i class="s-dot c-' + (fin ? 'd' : 'r') + '"></i><b>' + name + '</b><span>· ' + (fin ? 'Done' : 'Running') + '</span></div>' +
+      '<div class="s-progress"><i style="width:' + pct + '%"></i></div><div class="s-lines">' + rows.map(function (r) {
+        return '<i class="s-dot c-' + r[0] + '"></i><b>' + r[1] + '</b><span' + (r[0] === 'd' ? ' class="fin"' : '') + '>' + r[2] + ' · ' + {d: 'OK', r: 'Running', w: 'Waiting'}[r[0]] + '</span>';
+      }).join('') + '</div><p>' + note + '</p></div>', fin ? 'fin' : '');
+  }
+  function opts(cls) {  // the answers: in the strip, and under the question among the messages
+    return OPT.map(function (o, i) {
+      return '<button class="' + cls + '" data-pick="' + i + '" aria-keyshortcuts="' + (i + 1) + '"><kbd class="s-num" aria-hidden="true">' + (i + 1) + '</kbd>' + o +
+        (i === 2 ? '<em class="s-adv">Recommended</em>' : '') + '</button>';
+    }).join('');
+  }
+  function intro(t) {
+    return '<div class="s-intro"><b>' + t.title + '</b><small>Opened today ' + t.at + ' · Place ' + t.n + ' · ' + t.id + '</small><span>' + t.sum + '</span></div><div class="s-day"><span>Today</span></div>';
+  }
+  function view() {  // the release topic now: whose turn, and its one line
+    var a = '«' + OPT[S.pick] + '»', st = S.st;
+    return {s: st < 2 || st === 4 ? 'you' : st < 6 ? 'work' : 'done', badge: st < 2 || st === 4,
+            note: [Q, Q, 'You answered ' + a + ', waiting to be picked up', 'You answered ' + a + ', an agent is working on it', 'Approve the staging deploy',
+                   'The tower is running the deploy', 'Deployed to staging, smoke tests passed'][st]};
+  }
+  function count(c) { return TASKS[S.st].split(c).length - 1; }
+  function segs() { return 'dbwyt'.replace(/./g, function (c) { return count(c) ? '<i class="c-' + c + '" style="flex:' + count(c) + '"></i>' : ''; }); }
+  function y(e) { return e.getBoundingClientRect().top; }
+
+  /* The list. A row is one element for the whole visit: it moves to its group, and slides there (not with reduced motion). */
+  function list() {
+    var flip = all('.s-sec-h,.s-list li'), was = ready && !still && flip.map(y), n = {you: 0, work: 0, done: 0}, had = document.activeElement;
+    Object.keys(T).sort(function (a, b) { return T[b].ts - T[a].ts; }).forEach(function (id) {
+      var t = T[id], v = id === 'rel' ? view() : t, b = t.el.firstChild, ul = uls[v.s], g = b.querySelector('.s-badge');
+      if (ul.children[n[v.s]] !== t.el) ul.insertBefore(t.el, ul.children[n[v.s]] || null);
+      n[v.s]++;
+      if (was && t.now !== v.s && b.animate) {  // it changed groups: over the others, with a ring that fades
+        t.el.classList.add('s-fly');
+        b.animate([{boxShadow: 'inset 0 0 0 2px #ff9dbd'}, {boxShadow: 'inset 0 0 0 2px transparent'}], 1400).onfinish = function () { t.el.classList.remove('s-fly'); };
+      }
+      t.now = v.s;
+      b.className = 's-ch' + (S.open === id ? ' active' : '') + (v.badge && !t.read ? ' unread' : '') + (id === 'rel' && !S.seen ? ' s-hint' : '');
+      b.setAttribute('aria-label', t.title + ': ' + LABEL[v.s] + '. ' + v.note);
+      b.setAttribute('aria-current', S.open === id);
+      b.querySelector('.s-ch-note').textContent = v.note;
+      b.querySelector('.s-ch-time').textContent = id === 'rel' ? 'now' : t.when;
+      g.hidden = !v.badge; g.classList.toggle('seen', !!t.read);
+    });
+    T.rel.el.querySelector('.s-mini').innerHTML = segs();
+    for (var k in uls) uls[k].previousElementSibling.querySelector('b').textContent = n[k];
+    $('.s-you-count').textContent = n.you + ' on you';
+    if (had !== document.activeElement && side.contains(had)) had.focus({preventScroll: true});
+    if (was) flip.forEach(function (e, i) {
+      var d = was[i] - y(e);
+      if (d && e.animate) e.animate([{transform: 'translateY(' + d + 'px)'}, {transform: 'none'}], {duration: 560, easing: 'cubic-bezier(.2,.8,.2,1)'});
+    });
+    $('.s-tip').style.top = T.rel.el.offsetTop + T.rel.el.offsetHeight / 2 + 'px';  // where the row stands, not where it is sliding from
+  }
+
+  /* The open topic. The release topic is built when it opens; then a new stage adds its message and changes the small
+     parts in place. Any other topic is a few fixed messages. */
+  function thread(fresh) {
+    var id = S.open, t = T[id], main = id === 'rel', v = main ? view() : t, low = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 90, mode, added, el, live;
+    app.classList.toggle('in-chat', !!id); $('.s-empty').hidden = !!id; $('.s-pane').hidden = !id; $('.s-tip').hidden = S.seen;
+    if (!id) return;
+    $('.s-head .s-slot').textContent = t.n; title.textContent = t.title; $('.s-tid').textContent = t.id; $('.s-box span').textContent = 'Message #' + t.id;
+    el = $('.s-chip'); el.textContent = LABEL[v.s]; el.dataset.s = v.s;
+    $('.s-note').textContent = (v.s === 'you' ? '' : 'Nothing to do on your side · ') + v.note;
+    $('.s-tasks').hidden = !main;
+    mode = !main ? '' : S.st < 2 ? 'q' : S.st > 5 ? 'end' : '';
+    if (pin.dataset.mode !== mode) {
+      pin.dataset.mode = mode; pin.className = 's-pin' + (mode === 'q' ? '' : ' calm');
+      pin.innerHTML = mode === 'q' ? '<div class="s-pin-label">An open question</div><div class="s-pin-text">' + Q + '</div><div class="s-pin-row">' + opts('s-btn') + '</div>' :
+        '<div class="s-pin-hint">Nothing is moving here, and the topic will close by itself.</div>';
+    }
+    pin.hidden = !mode;
+    if (!main) { if (!fresh) { scroll.innerHTML = intro(t) + t.body; scroll.scrollTop = 0; } return; }
+    $('.s-tbar').innerHTML = segs();
+    $('.s-tasks-line').innerHTML = '<span class="s-tl">Tasks: </span>' + [['y', ' on you'], ['w', ' in progress'], ['b', ' building'], ['t', ' to do'], ['d', ' done']].map(function (p) {
+      var n = count(p[0]); return !n ? '' : p[0] === 'y' ? '<b>' + n + p[1] + '</b>' : n + p[1];
+    }).filter(Boolean).join(' · ') + ' (of 5)';
+    $('.s-tasks-list').innerHTML = TASK.map(function (x, i) {
+      var c = TASKS[S.st][i]; return '<li class="s-task' + (c === 'y' ? ' mine' : '') + '"><span>' + x[0] + '<small>' + x[1] + '</small></span><em class="c-' + c + '">' + STATE[c] + '</em></li>';
+    }).join('');
+    if (!fresh) scroll.innerHTML = intro(t);
+    MSG.forEach(function (m, i) {
+      var want = S.st + (S.run > 1 ? .5 : 0) >= m[0], at = scroll.querySelector('[data-m="' + i + '"]');
+      if (want && !at) { at = added = document.createElement('div'); at.className = 's-msg' + (fresh ? ' fresh' : ''); at.dataset.m = i; at.innerHTML = m[1](); scroll.appendChild(at); }
+      else if (!want && at) at.remove();
+    });
+    all('[data-pick]').forEach(function (b) { b.disabled = S.st > 0; b.classList.toggle('chosen', S.st > 1 && +b.dataset.pick === S.pick); });
+    if ((el = scroll.querySelector('.s-ack'))) {  // what became of his answer: one line, only its words change
+      el.textContent = ACK[S.st]; el.dataset.a = S.st > 5 ? 'done' : ''; scroll.querySelector('.s-re').hidden = S.st < 2;
+    }
+    if ((live = scroll.querySelector('.s-live'))) {  // the live card: drawn again with the width it had, then filled to the new one
+      var c = CARD[S.pick], fin = S.run > 1, b = S.st > 3 ? 2 : S.bar, p = fin ? 100 : S.st > 4 ? 86 : [12, 42, 70][b];
+      live.innerHTML = status(c[0], fin, live.dataset.p || (fresh ? 0 : p), [[b ? 'd' : 'r', c[1], c[b ? 3 : 2]],
+        [b > 1 ? 'd' : b ? 'r' : 'w', 'Build', b > 1 ? 'passed in 4 min' : b ? 'compiling' : 'waiting'],
+        fin ? ['d', 'Deploy', 'live on staging'] : S.st > 4 ? ['r', 'Deploy', 'to staging'] : ['w', 'Deploy', S.st > 3 ? 'needs your OK' : 'to staging']],
+        fin ? 'Finished: nothing left to do' : S.st === 4 ? 'Waiting for your OK on the command below' : 'Nothing for you yet: this card updates in place');
+      el = live.querySelector('.s-progress i'); el.offsetWidth; el.style.width = p + '%'; live.dataset.p = p;
+    }
+    if ((el = scroll.querySelector('.s-run'))) {
+      el.innerHTML = S.run > 1 ? '✓ Done' : S.run ? '⏳ Running' : PLAY + 'Run';
+      el.disabled = S.st > 4; el.dataset.r = S.run > 1 ? 'ok' : ''; el.classList.toggle('s-hint', S.st === 4);
+    }
+    /* where he reads: the top while the question is open, his answer once it is done, else the last message */
+    if (!fresh || S.st && (added || low)) scroll.scrollTo({top: !S.st ? 0 : S.st > 5 ? scroll.querySelector('[data-m="2"]').offsetTop - 8 : scroll.scrollHeight, behavior: fresh && !still ? 'smooth' : 'auto'});
+  }
+
+  /* The line above the window: the step, and what to do next. It is a polite live region, so each step is read aloud. */
+  function coach(extra) {
+    var st = S.st, on = S.open === 'rel', k = st > 5 ? 5 : st > 3 ? 4 : st > 2 ? 3 : st ? 2 : S.seen ? 1 : 0,
+        text = extra || (on || !S.seen || st > 5 ? '' : !st || st === 4 ? 'Release 2.4 waits for you: open it from the list.' : 'Release 2.4 keeps moving: watch it in the list.') || [
+          'Tap the first topic: it is the one that waits for you.',
+          'The question stays attached to its topic. Tap an answer, or press 1, 2 or 3.',
+          st === 1 ? 'Chosen: ' + OPT[S.pick] + '. It sends in 4 seconds, and Undo (or Esc) takes it back.' : 'Received. Nothing is on you now: the topic waits for an agent.',
+          'An agent picked it up. The topic moved to In progress, and one card updates in place.',
+          st === 4 ? 'On you again: the tower asks to run a command. Press Run to read it first.' : 'Approved. The tower runs it and reports in the thread.',
+          'One answer, one approval, and no hunting for the right window.'][k];
+    if (!extra && S.open && !on) text = 'This topic is read only in the demo. ' + (st > 5 ? 'Release 2.4 is done: Start over plays it again.' : S.seen ? text : 'The first topic in the list is the one to play.');
+    text = '<span class="vh">Step ' + (k + 1) + ' of 6. </span><b>' + ['The list', 'Open a topic', 'Answer', 'Agents work', 'Approve', 'Done'][k] + '.</b> ' + text;
+    if (text !== said) $('.s-say').innerHTML = said = text;
+    all('.s-steps li').forEach(function (p, i) { p.className = i < k ? 'was' : i === k ? 'now' : ''; });
+    sec.dataset.turn = view().s; $('.s-again').classList.toggle('go', st > 5);
+  }
+  function paint(fresh, extra) { list(); thread(fresh); coach(extra); ready = true; }
+  function set(st, extra) {  // the release topic reaches a stage; a change of turn puts it first in its new group
+    var was = view().s; S.st = st;
+    if (view().s !== was) T.rel.ts = ++S.clock;
+    if (st === 4) T.rel.read = S.open === 'rel';
+    paint(true, extra);
+  }
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function stop() { timers.forEach(clearTimeout); timers = []; }
+  function to(el) { if (el) el.focus({preventScroll: true}); }
+
+  function show(id) {  // open a topic: the keys land on what there is to do in it
+    S.open = id; T[id].read = true; if (id === 'rel') S.seen = true;
+    paint();
+    to(id !== 'rel' ? title : !S.st ? pin.querySelector('button') : S.st === 4 ? scroll.querySelector('.s-run') : title);
+  }
+  function choose(i) {  // an answer: it waits four seconds, as in the app, and Undo takes it back
+    if (S.open !== 'rel' || S.st) return;
+    S.pick = i; set(1);
+    toasts.innerHTML = '<div class="s-toast"><span>Chosen: ' + OPT[i] + '</span><button class="s-undo" data-act="undo" aria-keyshortcuts="Escape"><u>Undo</u><kbd aria-hidden="true">Esc</kbd></button><i></i></div>';
+    to(toasts.querySelector('button'));
+    later(function () {
+      var had = toasts.contains(document.activeElement);
+      toasts.innerHTML = ''; set(2); if (had) to(title);
+      later(function () { S.bar = 0; set(3); later(tick, 1500); }, 1300);
+    }, 4000);
+  }
+  function tick() {  // the agent works: the card fills, then the tower asks to run a command
+    S.bar++; paint(true);
+    later(S.bar < 2 ? tick : function () {
+      var a = document.activeElement;
+      set(4);
+      if (S.open === 'rel' && (app.contains(a) || armed && a === document.body)) to(scroll.querySelector('.s-run'));
+    }, 1500);
+  }
+  function undo() {
+    if (S.st !== 1) return;
+    var i = S.pick; stop(); toasts.innerHTML = '';
+    set(0, 'Taken back: nothing was sent. Tap an answer, or press 1, 2 or 3.');
+    if (S.open === 'rel') to(pin.querySelectorAll('button')[i]);
+  }
+  function ask(on) { over.hidden = !on; side.toggleAttribute('inert', on); chat.toggleAttribute('inert', on); }
+  function run() {  // he confirmed: the tower "runs" it, reports, and the topic is done
+    ask(false); S.run = 1; set(5); to(title);
+    later(function () { S.run = 2; paint(true); later(function () { set(6); }, 1500); }, 1900);
+  }
+  function cancel() { ask(false); coach('Not run. The command still waits for your OK.'); to(scroll.querySelector('.s-run')); }
+  function reset() {
+    stop(); toasts.innerHTML = ''; ask(false);
+    S = {open: null, st: 0, pick: 2, bar: 0, run: 0, seen: false, clock: 9};
+    T.rel.ts = 9; T.rel.read = T.onb.read = false;
+    $('.s-tasks-top').setAttribute('aria-expanded', false); $('.s-tasks-list').hidden = true; $('.s-list').scrollTop = 0;
+    paint();
+  }
+
+  sec.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-go],[data-pick],[data-act]'), a = b && b.dataset.act, id = S.open;
+    if (e.target === over) cancel();
+    if (!b || b.disabled) return;
+    if (b.dataset.go) show(b.dataset.go);
+    else if (b.dataset.pick) choose(+b.dataset.pick);
+    else if (a === 'undo') undo();
+    else if (a === 'again') reset();
+    else if (a === 'ok') run();
+    else if (a === 'no') cancel();
+    else if (a === 'back') { S.open = null; paint(); to(T[id].el.firstChild); }
+    else if (a === 'type') coach('Typing is switched off in this demo: use the buttons.');
+    else if (a === 'tasks') { id = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', id); $('.s-tasks-list').hidden = !id; }
+    else if (S.st === 4) { ask(true); coach('Read the exact command, then confirm. This is a demo: nothing runs.'); to(over.querySelector('.s-dialog-foot :last-child')); }
+  });
+  /* The keys, while he is in the demo (the focus is inside it, or his last press was): 1 to 3 answer, Esc takes the
+     answer back or closes the dialog, Tab stays inside the open dialog. */
+  document.addEventListener('pointerdown', function (e) { armed = app.contains(e.target); }, true);
+  document.addEventListener('keydown', function (e) {
+    var a = document.activeElement, f;
+    if (e.ctrlKey || e.metaKey || e.altKey || !(app.contains(a) || armed && a === document.body)) return;
+    if (!over.hidden) {
+      if (e.key === 'Escape') cancel();
+      else if (e.key === 'Tab') { f = [].slice.call(over.querySelectorAll('button,pre')); e.preventDefault(); to(f[(f.indexOf(a) + (e.shiftKey ? f.length - 1 : 1)) % f.length]); }
+    } else if (e.key === 'Escape' && S.st === 1) { e.preventDefault(); undo(); }
+    else if (/^[123]$/.test(e.key) && S.open === 'rel' && !S.st) { e.preventDefault(); choose(e.key - 1); }
+  });
+
+  all('.s-sec').forEach(function (s) { uls[s.dataset.s] = s.querySelector('ul'); });
+  Object.keys(T).forEach(function (id) {
+    var t = T[id];
+    t.el = document.createElement('li');
+    t.el.innerHTML = '<button class="s-ch" data-go="' + id + '"><span class="s-slot">' + t.n + '</span><span class="s-ch-text"><span class="s-ch-title">' + t.title +
+      '</span><span class="s-ch-note"></span>' + (id === 'rel' ? '<span class="s-mini"></span>' : '') + '</span><span class="s-ch-side"><span class="s-ch-time"></span><span class="s-badge">1</span></span></button>';
+  });
+  reset();
+})();
+</script>
+</body>
+</html>

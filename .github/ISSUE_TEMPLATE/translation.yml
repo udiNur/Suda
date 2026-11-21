@@ -1,0 +1,38 @@
+name: Translation
+description: A mistake in a translation, or a new language.
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        README.md is the source of every README translation, and the English in the code is the source of every
+        table in `suda/locales/`. A translation keeps the meaning of the English, line for line.
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Hebrew
+        - Simplified Chinese
+        - Japanese
+        - A new language (name it below)
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - README (README.<lang>.md)
+        - The page (suda/locales/<lang>.json)
+        - The CLI (suda/locales/<lang>.cli.json)
+        - The MD Viewer (suda/locales/mdv/<lang>.json)
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: The text
+      description: The English source, the current translation, and what it should say.
+    validations:
+      required: true

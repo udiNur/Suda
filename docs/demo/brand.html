@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Suda's small brand on one sheet (docs/assets/brand.png, 1280 by 580): the mark, the palette taken from the app
+     itself (suda.html: the sidebar and the three turns), and the type. docs/brand.md says how to use them. -->
+<html lang="en"><head><meta charset="utf-8"><title>Suda brand</title>
+<style>
+  html,body{margin:0;width:1280px;height:580px;overflow:hidden}
+  body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#2c1330;background:#f7f0f8}
+  .mark{position:absolute;left:56px;top:56px;width:300px;height:468px;border-radius:24px;background:linear-gradient(160deg,#3b1e3f,#1f1422);
+    color:#f7f0f8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+  .mark img{width:150px;height:150px;border-radius:34px;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+  .mark b{font-size:58px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+  .mark small{font-size:15px;color:#dcc9e0;text-align:center;padding:0 28px}
+  .right{position:absolute;left:396px;top:56px;width:828px}
+  h2{margin:0 0 14px;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#6a5370}
+  .sw{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .c{border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 1px 0 rgba(44,19,48,.08),0 6px 18px rgba(44,19,48,.08)}
+  .c div{height:96px;box-sizing:border-box}
+  .c p{margin:0;padding:10px 12px 12px;font-size:13px;line-height:1.35}
+  .c p b{display:block;font-size:15px}
+  .c p code{font:12px ui-monospace,Menlo,monospace;color:#6a5370}
+  .type{margin-top:30px;display:flex;gap:16px;align-items:stretch}
+  .t{flex:1;border-radius:16px;background:#fff;padding:16px 20px;box-shadow:0 6px 18px rgba(44,19,48,.08)}
+  .t .big{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.05}
+  .t .mid{font-size:20px;font-weight:700;margin-top:6px}
+  .t .body{font-size:15px;color:#5a4a5e;margin-top:6px}
+  .rows p{display:flex;align-items:center;gap:10px;margin:10px 0 0;font-size:14px;color:#5a4a5e}
+  .rows span{flex:none;width:68px;text-align:center;padding:4px 0;border-radius:999px;font-size:12px;font-weight:700}
+  .rows b{color:#2c1330}
+</style></head>
+<body>
+  <div class="mark"><img src="../../icons/suda-512.png" alt=""><b>Suda</b><small>One topic, one thread, and the people and agents around it.</small></div>
+  <div class="right">
+    <h2>Palette</h2>
+    <div class="sw">
+      <div class="c"><div style="background:#3b1e3f"></div><p><b>Plum</b><code>#3B1E3F</code><br>mark and list</p></div>
+      <div class="c"><div style="background:#1f1422"></div><p><b>Night</b><code>#1F1422</code><br>dark grounds</p></div>
+      <div class="c"><div style="background:#e0306a"></div><p><b>Rose</b><code>#E0306A</code><br>on you</p></div>
+      <div class="c"><div style="background:#ff7aa0"></div><p><b>Blush</b><code>#FF7AA0</code><br>on dark</p></div>
+      <div class="c"><div style="background:#d08a1c"></div><p><b>Amber</b><code>#D08A1C</code><br>working</p></div>
+      <div class="c"><div style="background:#2f9467"></div><p><b>Green</b><code>#2F9467</code><br>done</p></div>
+      <div class="c"><div style="background:#f7f0f8;border-bottom:1px solid #eadfec"></div><p><b>Mist</b><code>#F7F0F8</code><br>light grounds</p></div>
+    </div>
+    <div class="type">
+      <div class="t"><h2>Type</h2><div class="big">A topic is not an agent.</div><div class="mid">System sans, heavy for titles</div><div class="body">Plain words, short lines, phone first. No new font to load.</div></div>
+      <div class="t"><h2>The three turns</h2><div class="body">Every color in Suda means whose turn it is.</div>
+        <div class="rows">
+          <p><span style="background:#fde7ee;color:#b3184d">On you</span><b>Release 2.4</b>Approve the staging deploy</p>
+          <p><span style="background:#fbf0dc;color:#8a5a09">Working</span><b>Nightly export</b>Retrying 3 batches</p>
+          <p><span style="background:#e2f3ea;color:#1f6b49">Done</span><b>Cost report</b>Finished, summary inside</p>
+        </div>
+        <div class="body" style="margin-top:12px">A note for someone who will not open the thread.</div></div>
+    </div>
+  </div>
+</body></html>

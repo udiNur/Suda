@@ -1,0 +1,32 @@
+{
+  "name": "Suda",
+  "short_name": "Suda",
+  "description": "My threads: what is on me, what is in the works, what is done",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "suda.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#3a1f3d",
+  "theme_color": "#3a1f3d",
+  "icons": [
+    {
+      "src": "icons/suda2-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/suda2-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/suda2-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

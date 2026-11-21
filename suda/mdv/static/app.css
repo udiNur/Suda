@@ -1,0 +1,108 @@
+/* MD Viewer: only what a document needs beyond Suda's own sheet (suda.css, used as it is). From the approved mockup. */
+.head,.xbar,.find{flex:none}
+.doc-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;position:relative}
+.doc{max-width:46rem;margin:0 auto;padding:14px 22px 90px}
+.doc.sbs,.doc.wide{max-width:none}
+.doc.sbs{padding-inline:14px}
+.blk{padding:1px 8px;margin-inline:-8px;border-radius:8px;line-height:1.6}
+.blk>p:first-child.h{margin-top:14px}
+.blk.flash{animation:flash 1.8s ease-out}
+.blk .card{margin:6px 0}
+.blk .md,.blk{overflow-wrap:anywhere}
+.doc .blk p.h1{font-size:1.5em;margin-top:6px}
+.doc .blk p.h2{font-size:1.2em;margin-top:18px;padding-bottom:2px}
+/* side by side: one row per block, so a paragraph and its translation stand at the same height */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 30px;padding:2px 10px;border-radius:8px}
+.pair:hover{background:var(--hover)}
+.pair>.blk{margin:0;padding:1px 0}
+.pair{background:linear-gradient(var(--line),var(--line)) center/1px 100% no-repeat}
+.pair:hover{background:linear-gradient(var(--line),var(--line)) center/1px 100% no-repeat,var(--hover)}
+/* a card (table, code, diagram) keeps to its column: Suda's wide-screen rule measures against a message, not a column */
+.doc .md>.card,.doc .blk>.card{width:auto!important;max-width:100%!important}
+bdi.fname{direction:ltr;unicode-bidi:isolate;font:12px ui-monospace,Menlo,monospace}
+.cols{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:0 30px;margin:0 0 6px;padding:6px 10px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--mute)}
+.cols span{display:flex;align-items:center;gap:6px}
+/* stacked (a phone): the translation sits under its block, in a quiet frame */
+.under{margin:2px 0 12px;padding:4px 10px;border-inline-start:3px solid var(--build);border-radius:4px;background:color-mix(in srgb,var(--build) 6%,transparent)}
+.under>.blk{margin:0;padding:0}
+.under-tag{display:block;font-size:11px;font-weight:700;color:var(--build);letter-spacing:.02em}
+.blk.stale{outline:1.5px dashed var(--work);outline-offset:3px}
+.stale-tag{display:inline-block;margin:2px 0;padding:0 8px;border-radius:99px;font-size:11.5px;font-weight:700;background:color-mix(in srgb,var(--work) 18%,transparent);color:var(--work-ink)}
+.blk.typing::after{content:"";display:inline-block;width:7px;height:1.05em;margin-inline-start:2px;vertical-align:-2px;background:var(--build);animation:rec-blink 1s steps(2,jump-none) infinite}
+.tr-empty{padding:10px 12px;border:1px dashed var(--line-strong);border-radius:8px;color:var(--mute);font-size:13.5px}
+/* the translation bar: under the head, like a thread's tasks row */
+.xbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 20px;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute)}
+.seg{flex:none;display:inline-flex;padding:2px;border-radius:9px;background:var(--soft);border:1px solid var(--line)}
+.seg button{min-height:28px;padding:0 12px;border-radius:7px;font-size:13px;font-weight:700;color:var(--mute);white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px #0000002e}
+.xstate{flex:1;min-width:10ch;display:flex;align-items:center;gap:8px;overflow:hidden}
+.xstate .note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xbar .btn{min-height:30px;padding:2px 12px;font-size:13px;white-space:nowrap}
+.head-status{white-space:nowrap}
+.prog{flex:0 0 90px;height:5px;border-radius:3px;background:var(--soft);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--build);transition:width .2s}
+/* the summary: Suda's pinned strip, above the document */
+.sum{margin:12px auto 0;max-width:46rem;padding:10px 14px;border:1px solid var(--line);border-inline-start:3px solid var(--who-tower);border-radius:10px;background:color-mix(in srgb,var(--who-tower) 5%,var(--bg))}
+.sum-top{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--who-tower)}
+.sum-top span{flex:1}
+.sum ul{margin:4px 0 0;padding-inline-start:20px}
+.sum li{margin:2px 0}
+/* the head: actions grouped at the end */
+.head-acts{flex:none;display:flex;align-items:center;gap:2px}
+.icon svg{width:20px;height:20px}
+.icon .dotmark{position:absolute;top:6px;inset-inline-end:6px;width:8px;height:8px;border-radius:50%;background:var(--work);box-shadow:0 0 0 2px var(--bg)}
+.head-status .reload{display:inline-flex;align-items:center;gap:5px;color:var(--done-ink);font-weight:600}
+.head-status .reload::before{content:"";width:7px;height:7px;border-radius:50%;background:#2fb36b}
+.menu-pop{position:fixed;z-index:40;width:min(290px,calc(100vw - 16px));background:var(--bg);color:var(--ink);border:1px solid var(--line-strong);border-radius:12px;box-shadow:0 14px 34px #0007;padding:6px}
+.menu-pop button{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:8px;border-radius:8px;font-weight:600;text-align:start}
+.menu-pop button:hover,.menu-pop button:focus-visible{background:var(--soft)}
+.menu-pop .t{font-size:12px;font-weight:700;color:var(--mute);padding:6px 8px 2px}
+.menu-pop hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.menu-pop kbd{margin-inline-start:auto;color:var(--mute)}
+.touch .menu-pop button{min-height:48px}
+.diagram-body svg{display:block;height:auto;margin-inline:auto}
+.diagram-body .diagram-note{font-size:13px;color:var(--mute)}
+/* phone: the head in two rows, as Suda's */
+@media (max-width:639px){
+  .head{grid-template-columns:minmax(0,1fr) auto}
+  .head-title{grid-area:1/1;padding-inline-start:10px}
+  .head-acts{grid-area:1/2}
+  .head-status{flex-wrap:wrap;display:flex;-webkit-line-clamp:unset;gap:4px 8px}
+  .xbar{padding:6px 10px;gap:6px}
+  .xstate .note.saved{display:none}
+  .xbar{flex-wrap:nowrap}
+  .seg button{padding:0 9px}
+  .doc{padding:10px 14px 90px}
+  .sum{margin:10px 12px 0}
+}
+@media (max-width:899px){.head .tid,#b-find{display:none}.xstate .note.saved{display:none}}
+
+/* no file yet: a box to open one, and the ones he opened lately */
+.land{max-width:40rem;margin:8vh auto 0;padding:0 18px}
+.land h1{font-size:22px;margin:0 0 6px}
+.land p{color:var(--mute);margin:0 0 14px}
+.land form{display:flex;gap:8px}
+.land input{flex:1;min-width:0;min-height:40px;padding:6px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--bg);color:var(--ink);font:14px ui-monospace,Menlo,monospace;direction:ltr}
+.land .recent{margin-top:22px;display:flex;flex-direction:column;gap:2px}
+.land .recent a{display:block;padding:8px 10px;border-radius:8px;color:var(--ink);text-decoration:none;direction:ltr;text-align:left;font:13px ui-monospace,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.land .recent a:hover{background:var(--soft)}
+.oops{max-width:40rem;margin:10vh auto;padding:16px 18px;border:1px solid var(--line);border-radius:12px;text-align:center}
+.oops code{direction:ltr;unicode-bidi:isolate}
+.tr-full{white-space:normal}
+.blk a.md-link{font-weight:600}
+.head-status .live{display:inline-flex;align-items:center;gap:5px;color:var(--mute)}
+.head-status .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#9aa0a6}
+.head-status .live.on::before{background:#2fb36b}
+.blk.failed{outline:1.5px dashed var(--you);outline-offset:3px}
+/* inside Suda's panel (embed=1): the panel's own buttons stand at the end of the head, after the viewer's */
+#head-embed{border-inline-start:1px solid var(--line);padding-inline-start:4px;margin-inline-start:2px}
+a.icon{display:inline-flex;align-items:center;justify-content:center;color:inherit}
+@media (max-width:639px){.embedded .head{grid-template-columns:minmax(0,1fr) auto auto}.embedded #head-embed{grid-area:1/3;border:0;padding:0;margin:0}}
+/* a note's pictures (suda-fixes task 45): as wide as the text at most, never wider than their own size */
+.md-img{display:inline-block;max-width:100%;margin:4px 0;vertical-align:middle}
+.md-img img{display:block;max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line)}
+.md-img-missing{display:inline-block;padding:2px 10px;border:1px dashed var(--line-strong);border-radius:8px;color:var(--mute);font-size:13px}
+/* links to other notes (task 73): one that does not open is marked and does not open; a name in code waits for the server */
+#doc a.md-link.md-broken{color:var(--mute);text-decoration:underline dashed;cursor:not-allowed}
+#doc a.md-link[data-maybe]{color:inherit;text-decoration:none;pointer-events:none}

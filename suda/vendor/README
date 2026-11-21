@@ -1,0 +1,4 @@
+mermaid 12.3.0, dist/mermaid.min.js from https://registry.npmjs.org/mermaid/-/mermaid-12.3.0.tgz
+tarball sha1 e860165e0a19778ebef98038c0436bbee6783ba9
+file sha256 336df803d87a38b70a01e736e666c8f7601d2ce42f5e47c8fafe5d721074b9a3
+Used only inside diagram.html, which Suda loads in a sandboxed frame. Never loaded from a CDN.

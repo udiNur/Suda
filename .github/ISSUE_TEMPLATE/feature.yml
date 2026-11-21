@@ -1,0 +1,28 @@
+name: Feature request
+description: Something Suda could do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suda is small and opinionated: one thread per topic, no dependencies, the server on 127.0.0.1 only.
+        A request that fits that is the easiest to say yes to.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you were trying to do, and where Suda got in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: How it could work, on the page, in the `threads` CLI, or for agents (SKILL.md).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Workarounds, or other tools that do it.

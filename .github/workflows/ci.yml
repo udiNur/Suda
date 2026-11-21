@@ -1,0 +1,41 @@
+# The suites that need no browser (in tests/). The page's end-to-end suites (tests/test_e2e*.py) drive a headless
+# browser through agent-browser and run locally, as CONTRIBUTING.md says.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}, Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.9", "3.12"]
+    env:
+      THREADS_EXPORT_STATE: "1"    # state.json after every save, as tests/run_all.py sets it: the tests read it (sqlite177)
+      THREADS_AUTO_IMPORT: "1"     # and a state.json a test writes is taken in by the next command
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: The CLI and the server
+        working-directory: tests
+        run: python3 -m unittest test_threads test_live test_spaces test_server test_server_delta test_server_mdv test_server_range test_server_sse
+      - name: The page's pure functions (under node)
+        run: python3 tests/test_slack.py
+      - name: English in the source, no dashes, no personal names
+        working-directory: tests
+        run: python3 -m unittest test_english.Source
+      - name: The READMEs stay in step
+        run: python3 tests/test_readme.py

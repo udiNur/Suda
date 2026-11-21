@@ -1,0 +1,7 @@
+# Suda has no Python or npm dependencies; only the GitHub Actions in .github/workflows are kept current.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
