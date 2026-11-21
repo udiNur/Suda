@@ -37,6 +37,7 @@ import mimetypes
 import os
 from pathlib import Path
 import re
+import socketserver
 import stat
 import subprocess
 import sys
@@ -707,6 +708,12 @@ class Handler(BaseHTTPRequestHandler):
 
 class Server(ThreadingHTTPServer):
     daemon_threads = True
+
+    def server_bind(self):
+        """As HTTPServer's, without socket.getfqdn(host): a reverse DNS lookup for a name nothing uses, which made the
+        server take more than 10 s to start where the resolver is slow (GitHub's macOS runners)."""
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 def more_files():

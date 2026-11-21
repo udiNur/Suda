@@ -16,8 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python: ["3.9", "3.12"]
+        # Python 3.9 is the oldest the README promises; setup-python has no 3.9 on the newest Ubuntu, so it runs on
+        # ubuntu-24.04 there
+        include:
+          - {os: ubuntu-24.04, python: "3.9"}
+          - {os: ubuntu-latest, python: "3.12"}
+          - {os: macos-latest, python: "3.9"}
+          - {os: macos-latest, python: "3.12"}
     env:
       THREADS_EXPORT_STATE: "1"    # state.json after every save, as tests/run_all.py sets it: the tests read it (sqlite177)
       THREADS_AUTO_IMPORT: "1"     # and a state.json a test writes is taken in by the next command

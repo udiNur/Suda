@@ -36,6 +36,25 @@ def load_server(name, boards, slug='threads'):
     return mod
 
 
+class Start(unittest.TestCase):
+    def test_the_server_starts_without_asking_dns_for_its_own_name(self):
+        """http.server's HTTPServer names itself by socket.getfqdn(host), a reverse DNS lookup: on a machine whose
+        resolver is slow (GitHub's macOS runners) the server took more than 10 s to start. It needs no name."""
+        import socket
+        with tempfile.TemporaryDirectory(prefix='.start-test-') as tmp:
+            mod = load_server('server_start', tmp)
+            asked = []
+            real = socket.getfqdn
+            socket.getfqdn = lambda *a, **k: asked.append(a) or real(*a, **k)
+            try:
+                server = mod.Server(('127.0.0.1', 0), mod.Handler)
+                server.server_close()
+            finally:
+                socket.getfqdn = real
+            self.assertEqual(asked, [], 'the server asked DNS for its own name')
+            self.assertEqual(server.server_name, '127.0.0.1')
+
+
 class Range(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

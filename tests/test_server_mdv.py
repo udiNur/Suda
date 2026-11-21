@@ -109,7 +109,12 @@ class Board(unittest.TestCase):
                 return proc
             except OSError:
                 time.sleep(0.05)
-        self.fail('the board server did not start')
+        proc.terminate()
+        try:
+            said = proc.communicate(timeout=5)[1].decode('utf-8', 'replace')[-2000:]
+        except subprocess.TimeoutExpired:
+            said = '(no answer)'
+        self.fail('the board server did not start: ' + said)
 
     def req(self, method, path, body=None, headers=None):
         c = http.client.HTTPConnection('127.0.0.1', self.port, timeout=20)
