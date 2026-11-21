@@ -23,7 +23,7 @@ jobs:
       THREADS_AUTO_IMPORT: "1"     # and a state.json a test writes is taken in by the next command
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - uses: actions/setup-node@v4
